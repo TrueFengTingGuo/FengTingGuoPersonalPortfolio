@@ -28,15 +28,17 @@ header{
     left: 0px;
     right:0px;
     border-bottom: 1px solid #423940;
-    background-color: rgba(255, 132, 132, 0.3);  
+    background-color: rgba(85, 54, 54, 0.3);  
     padding: 0px 15px;
-
+    z-index: 10; /* property specifies the stack order of an element.*/
+    
 }
 
 header .row{
 
     justify-content: space-between;
     align-items: center; /*grounp children in the center*/
+    
 }
 
 header .brand-name a{
@@ -44,6 +46,7 @@ header .brand-name a{
     font-size:  22px;
     font-weight: 600;
     color: white;
+    /*text-transform: uppercase;*/
     position: relative; /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
 
 }
@@ -71,18 +74,123 @@ header .navbar ul li{
 }
 
 header .navbar ul li a{
-    font-size: 25px;
+    font-size: 20px;
     text-decoration: none; /*Sets the kind of text decoration to use (like underline, overline, line-through)*/
     line-height: 72px;
     color: white;
+    display: block; /*Displays an element as a block element (like <p>). It starts on a new line, and takes up the whole width*/
     font-weight: 600;
+    position: relative;
 }
 
+header .navbar ul li a.active::before{ /* inserts something before the content of each selected element(s).*/
+    content: '';
+    height: 3px;
+    background-color: white;
+    width: 100%;
+    position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
+    left: 0px;
+    bottom: 0px;
+
+}
 
 .home{
     min-height: 100vh; /*Relative to 1% of the height of the viewport**/
     background-image: url("Images/Fruit.jpg");
     background-size: cover;
     background-position: center;
+    padding:15px;
+}
+
+.home .full-screen{
+
+    min-height: 100vh;
+    
+}
+
+.home .home-content{
+
+    flex: 0 0 100%; /*flex has 3 property  flex-grow flex-shrink flex-basis;*/
+    /*flex-grow A number specifying how much the item will grow relative to the rest of the flexible items*/
+    /*flex-shrink 	A number specifying how much the item will shrink relative to the rest of the flexible items*/
+    /*flex-shrink 	The length of the item. Legal values: "auto", "inherit", or a number followed by "%", "px", "em" or any other length unit*/
+    max-width: 100%;
+    display:flex;
+    flex-wrap: wrap;
+    align-items: center;
+    
+}
+
+.home .home-content .block{
+
+
+    flex:0 0 75%;
+    max-width:75% ;
+    padding-left: 20px;
+    border-left: 5px solid white;
+    
+}
+.home .home-content .block h6{
+
+    color: white;
+    font-size: 25px;
+    font-weight: 500; /*imported font*/
+    margin: 0;  /*properties are used to create space around elements, outside of any defined borders. top right bottom  left*/ 
+    padding: 0;
+    
+}
+.home .home-content .block h1{
+
+    color: white;
+    font-size: 70px;
+    font-weight: 600; /*imported font*/
+
+    padding: 0;
+    
+}
+.home .home-content .block h3{
+
+    color: white;
+    font-size: 30px;
+    font-weight: 500; /*imported font*/
+    margin: 0;
+    padding: 0;
+    
+}
+
+.home .home-content .block ul{ /*list container mod*/
+    list-style: none;
+    border-radius: 4px;
+    color: white;
+    border:3px solid white;
+    padding: 10px 25px;
+    margin: 0;
+    text-decoration: none;
+    display: inline-flex;
+}
+
+.home .home-content .block ul li{
+
+    display: table-cell;
+    float: none;
+
+}
+
+.home .home-content .block .github-btn ul li a{
+
+    color: white;
+    text-decoration: none;
+    font-size: 25px;
+    font-weight: 600; /*imported font*/
+    
+}
+
+.home .home-content .block .github-btn ul li .github-btn-icon{
+
+    background-image: url("Images/GitHub-Mark.png");
+    background-size: cover;
+    background-position: center;
+    padding:30px;
+    position: relative;
 
 }
