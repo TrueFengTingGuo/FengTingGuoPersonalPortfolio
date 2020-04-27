@@ -27,20 +27,37 @@ header{
     position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
     left: 0px;
     right:0px;
+    border-bottom: 1px solid #423940;
+    background-color: rgba(255, 132, 132, 0.3);  
+    padding: 0px 15px;
 
 }
 
 header .row{
+
     justify-content: space-between;
+    align-items: center; /*grounp children in the center*/
 }
 
-header .brand-name{
-background-color: blue;
+header .brand-name a{
+    text-decoration: none;
+    font-size:  22px;
+    font-weight: 600;
+    color: white;
+    position: relative; /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
+
 }
 
-header .navbar{
-   
+header .brand-name a::before{ /* inserts something before the content of each selected element(s).*/
+    content: '';
+    height: 3px;
+    background-color: white;
+    width: 100%;
+    position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
+    left: 0px;
+    bottom: 0px;
 }
+
 
 header .navbar ul{ /*list container mod*/
     list-style: none;
@@ -54,14 +71,12 @@ header .navbar ul li{
 }
 
 header .navbar ul li a{
-    font-size: 35px;
+    font-size: 25px;
     text-decoration: none; /*Sets the kind of text decoration to use (like underline, overline, line-through)*/
     line-height: 72px;
     color: white;
     font-weight: 600;
 }
-
-
 
 
 .home{
