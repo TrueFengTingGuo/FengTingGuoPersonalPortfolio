@@ -31,14 +31,12 @@ header{
     background-color: rgba(85, 54, 54, 0.3);  
     padding: 0px 15px;
     z-index: 10; /* property specifies the stack order of an element.*/
-    
 }
 
 header .row{
 
     justify-content: space-between;
     align-items: center; /*grounp children in the center*/
-    
 }
 
 header .brand-name a{
@@ -49,16 +47,6 @@ header .brand-name a{
     /*text-transform: uppercase;*/
     position: relative; /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
 
-}
-
-header .brand-name a::before{ /* inserts something before the content of each selected element(s).*/
-    content: '';
-    height: 3px;
-    background-color: white;
-    width: 100%;
-    position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
-    left: 0px;
-    bottom: 0px;
 }
 
 
@@ -83,17 +71,23 @@ header .navbar ul li a{
     position: relative;
 }
 
-header .navbar ul li a.active::before{ /* inserts something before the content of each selected element(s).*/
+header .navbar ul li a::before{ /* inserts something before the content of each selected element(s).*/
     content: '';
     height: 3px;
     background-color: white;
-    width: 100%;
+    width: 0%;
     position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
     left: 0px;
     bottom: 0px;
+    transition: all 0.2s ease;
 
 }
 
+
+header .navbar ul li a:hover:before{ 
+    width: 100%;
+    left:0; /*wired bug where there is some left over white line*/
+}
 .home{
     min-height: 100vh; /*Relative to 1% of the height of the viewport**/
     background-image: url("Images/Fruit.jpg");
@@ -128,6 +122,7 @@ header .navbar ul li a.active::before{ /* inserts something before the content o
     max-width:75% ;
     padding-left: 20px;
     border-left: 5px solid white;
+
     
 }
 .home .home-content .block h6{
@@ -158,39 +153,35 @@ header .navbar ul li a.active::before{ /* inserts something before the content o
     
 }
 
-.home .home-content .block ul{ /*list container mod*/
-    list-style: none;
-    border-radius: 4px;
+.home .home-content .block .github-btn{
+
+    padding-top: 10px;
+}
+
+
+.home .home-content .block .github-btn a{
+
+    border-radius: 10px;
     color: white;
     border:3px solid white;
     padding: 10px 25px;
-    margin: 0;
     text-decoration: none;
-    display: inline-flex;
-}
-
-.home .home-content .block ul li{
-
-    display: table-cell;
-    float: none;
-
-}
-
-.home .home-content .block .github-btn ul li a{
-
-    color: white;
-    text-decoration: none;
-    font-size: 25px;
+    display: inline-block;
+    font-size: 15px;
     font-weight: 600; /*imported font*/
-    
+
+    transition: all .2s ease; /*CSS transitions allows you to change property values smoothly, over a given duration.*/
+    background-color: transparent;
 }
 
-.home .home-content .block .github-btn ul li .github-btn-icon{
+.home .home-content .block .github-btn a:hover{
 
     background-image: url("Images/GitHub-Mark.png");
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: 50% auto;
     background-position: center;
-    padding:30px;
-    position: relative;
 
+
+    background-color: white;
+    color: rgba(0, 0, 0, 0);
 }
