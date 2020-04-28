@@ -88,6 +88,12 @@ header .navbar ul li a:hover:before{
     width: 100%;
     left:0; /*wired bug where there is some left over white line*/
 }
+
+header .navbar ul li a.active::before{  /*A link becomes active when you click on it.*/
+    width: 100%;
+    left:0; /*wired bug where there is some left over white line*/
+}
+
 .home{
     min-height: 100vh; /*Relative to 1% of the height of the viewport**/
     background-image: url("Images/Fruit.jpg");
