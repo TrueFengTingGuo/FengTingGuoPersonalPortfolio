@@ -283,6 +283,34 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .about-me .about-content .text p{
     font-size: 15px;
     font-weight: 400;
-    color: rgb(151, 151, 151);
+    color: rgb(124, 124, 124);
+    margin: 0;
     
+}
+
+.about-me .about-content .text .info{
+    display: flex;
+    flex-wrap: wrap;
+    margin: 35px 0;
+    
+}
+
+.about-me .about-content .text .info .list{
+    flex: 0 0 calc(50% - 15px);
+    max-width: calc(50%- 15px); /*The calc() CSS function lets you perform calculations when specifying CSS property values.*/
+    margin-top: 35px;
+    display: flex;
+}
+
+.about-me .about-content .text .info .list label{
+
+    font-size: 15px;
+    font-weight: 600;
+
+}
+
+.about-me .about-content .text .info .list p{
+
+    margin-left: 15px;
+
 }
