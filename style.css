@@ -23,6 +23,10 @@ body{
 }
 
 
+
+
+
+
 header{
     position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
     left: 0px;
@@ -94,6 +98,12 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     left:0; /*wired bug where there is some left over white line*/
 }
 
+
+
+
+
+/*Home*/
+
 .home{
     min-height: 100vh; /*Relative to 1% of the height of the viewport**/
     background-image: url("Images/Fruit.jpg");
@@ -113,7 +123,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     flex: 0 0 100%; /*flex has 3 property  flex-grow flex-shrink flex-basis;*/
     /*flex-grow A number specifying how much the item will grow relative to the rest of the flexible items*/
     /*flex-shrink 	A number specifying how much the item will shrink relative to the rest of the flexible items*/
-    /*flex-shrink 	The length of the item. Legal values: "auto", "inherit", or a number followed by "%", "px", "em" or any other length unit*/
+    /*flex-basis 	The length of the item. Legal values: "auto", "inherit", or a number followed by "%", "px", "em" or any other length unit*/
     max-width: 100%;
     display:flex;
     flex-wrap: wrap;
@@ -143,7 +153,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .home .home-content .block h1{
 
     color: white;
-    font-size: 70px;
+    font-size: 65px;
     font-weight: 600; /*imported font*/
 
     padding: 0;
@@ -190,4 +200,89 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
     background-color: white;
     color: rgba(0, 0, 0, 0);
+}
+
+
+
+
+/*About me*/
+.about-me{
+    padding: 100px 15px;
+    background-color: rgb(241, 239, 239);
+}
+
+.about-me .section-title{
+    flex:0 0 100%;
+    max-width: 100%;
+    margin: 0 0 10px;
+    padding-bottom: 5px;
+}
+
+.about-me .section-title h1{
+
+    display:inline-block;
+    font-size: 35px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0;
+}
+
+.about-me .section-title p{
+
+    display:block;
+    text-transform: uppercase;
+    font-size: 15px;
+    color: rgb(109, 109, 109);
+    font-weight: 400;
+    letter-spacing: 2px;
+}
+
+.about-me .about-content{
+  
+
+   
+}
+
+.about-me .about-content .img{
+    flex: 0 0 33%; /*resize the image*/
+    max-width: 33%;
+}
+
+.about-me .about-content .img img{
+    width: 100%;
+    display: block;
+
+
+}
+
+.about-me .about-content .text{
+    flex: 0 0 66%;
+    max-width: 66%;
+   padding-left: 55px;
+}
+
+.about-me .about-content .text h4{
+    font-size: 25px;
+    font-weight: 600;
+    margin: 0 0 5px;
+
+}
+
+.about-me .about-content .text h6{
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 15px;
+    
+}
+
+.about-me .about-content .text h6 span{
+    color: rgb(255, 72, 0);
+    
+}
+
+.about-me .about-content .text p{
+    font-size: 15px;
+    font-weight: 400;
+    color: rgb(151, 151, 151);
+    
 }
