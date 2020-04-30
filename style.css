@@ -291,7 +291,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .about-me .about-content .text .info{
     display: flex;
     flex-wrap: wrap;
-    margin: 25px 0;
+    margin: 20px 0;
     
 }
 
