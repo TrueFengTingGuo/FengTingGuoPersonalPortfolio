@@ -333,7 +333,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .skills .img{
     flex: 0 0 30%;
     max-width: 30%;
-    margin-left: 45px;
+    margin-left: 85px;
 }
 
 .skills .img img{
@@ -368,7 +368,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 .skills .skills-content .skill-box .skill-bar{
     
-    background-color: rgb(160, 160, 160);
+    background-color: rgb(202, 202, 202);
     height: 6px;
     position: relative;
 }
