@@ -208,7 +208,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 /*About me*/
 .about-me{
     padding: 100px 15px;
-    background-color: rgb(241, 239, 239);
+    background-color: rgb(255, 255, 255);
 }
 
 .about-me .section-title{
@@ -237,11 +237,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     letter-spacing: 2px;
 }
 
-.about-me .about-content{
-  
 
-   
-}
 
 .about-me .about-content .img{
     flex: 0 0 33%; /*resize the image*/
