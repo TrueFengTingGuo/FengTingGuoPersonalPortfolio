@@ -316,7 +316,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 .skills{
-    padding: 50 px 50px;
+    padding: 50 px 15px;
 }
 
 .skills .skills-content{
@@ -348,7 +348,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     color: rgb(109, 109, 109);
     font-weight: 400;
     letter-spacing: 2px;
-    margin: 15px 0 20px;
+
     
 }
 
