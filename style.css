@@ -48,7 +48,7 @@ header .brand-name a{
     font-size:  22px;
     font-weight: 600;
     color: white;
-    /*text-transform: uppercase;*/
+    text-transform: uppercase;
     position: relative; /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
 
 }
@@ -325,8 +325,8 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     
 }
 
-.skills .align-items-center{
-    align-items: center;
+.align-items-center{
+    align-items: center !important;;
 }
 
 .skills .img{
@@ -389,4 +389,118 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     font-weight: 400;
     margin: 0;
 
+}
+
+.projects{
+    
+    padding: 100px 15px;
+    
+}
+
+.text-center{
+
+    text-align: center !important; /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+}
+
+.projects .section-title{
+    width: 100%; /*must need if i want to put text at the center*/
+}
+
+.projects .section-title h1{
+
+    display:inline-block;
+    font-size: 35px;
+    text-transform: uppercase;
+    font-weight: 600;
+    
+}
+
+.projects .section-title p{
+    text-transform: uppercase;
+    font-size: 15px;
+    color: rgb(109, 109, 109);
+    font-weight: 400;
+    letter-spacing: 2px;
+    margin: 0 0 40px;
+    
+}
+
+.projects .project-gallery{
+
+    flex: 0 0 100%;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap; /*wrap CSS property sets whether flex items are forced onto one line or can wrap onto multiple lines. If wrapping is allowed, it sets the direction that lines are stacked.*/
+    justify-content: space-between;
+}
+
+.projects .project-gallery .item{
+
+    flex: 0 0 calc(33% - 10px);
+    max-width: calc(33% - 10px);
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.projects .project-gallery .item img{
+
+    width: 100%;
+    display: block;
+    
+}
+
+.projects .project-gallery .item .overlay{
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center;
+}
+
+
+.projects .project-gallery .item .overlay h1{
+
+    color:  white;
+}
+
+.projects .project-gallery .item .github-btn{
+
+    padding-top: 10px;
+}
+
+
+.projects .project-gallery .item .github-btn a{
+
+    border-radius: 10px;
+    color: white;
+    border:3px solid white;
+    padding: 10px 25px;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600; /*imported font*/
+
+    transition: all .2s ease; /*CSS transitions allows you to change property values smoothly, over a given duration.*/
+    background-color: transparent;
+}
+
+.projects .project-gallery .item .github-btn a:hover{
+
+    background-image: url("Images/GitHub-Mark.png");
+    background-repeat: no-repeat;
+    background-size: 50% auto;
+    background-position: center;
+
+
+    background-color: white;
+    color: rgba(0, 0, 0, 0);
 }
