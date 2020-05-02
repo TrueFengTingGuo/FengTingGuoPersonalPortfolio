@@ -352,6 +352,10 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     
 }
 
+.skills .skills-content {
+    padding-left: 15px;
+
+}
 .skills .skills-content .skill-box{
     flex: 0 0 100%;
     max-width: 100%;
