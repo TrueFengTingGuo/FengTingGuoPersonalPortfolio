@@ -209,7 +209,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .about-me{
     padding: 100px 15px;
     background-color: rgb(255, 255, 255);
-    margin-bottom: -80px;
+    margin-bottom: -30px;
 }
 
 .about-me .section-title{
@@ -255,7 +255,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .about-me .about-content .text{
     flex: 0 0 66%;
     max-width: 66%;
-   padding-left: 55px;
+    padding-left: 55px;
 }
 
 .about-me .about-content .text h4{
@@ -311,7 +311,6 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     margin-left: 15px;
 
 }
-
 
 
 
