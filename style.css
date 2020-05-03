@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
  
+html{
+    scroll-behavior: smooth;
+}
 body{
     margin: 0;
     font-family: 'Poppins', sans-serif; 
@@ -35,6 +38,13 @@ header{
     background-color: rgba(85, 54, 54, 0.3);  
     padding: 0px 15px;
     z-index: 10; /* property specifies the stack order of an element.*/
+    
+}
+
+header .fixed{
+
+    border-color: rgb(255, 255, 255); 
+    position: fixed;
 }
 
 header .row{
@@ -53,6 +63,12 @@ header .brand-name a{
 
 }
 
+header .fixed .brand-name a{
+
+    color: white;
+
+
+}
 
 header .navbar ul{ /*list container mod*/
     list-style: none;
@@ -87,6 +103,9 @@ header .navbar ul li a::before{ /* inserts something before the content of each 
 
 }
 
+header .fixed .navbar ul li a{
+    position: fixed;
+}
 
 header .navbar ul li a:hover:before{ 
     width: 100%;
@@ -503,4 +522,36 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
     background-color: white;
     color: rgba(0, 0, 0, 0);
+}
+
+
+
+footer{
+    
+    padding: 50px 15px;
+    background-color: black;
+}
+
+footer .section-title{
+    width: 100%; /*must need if i want to put text at the center*/
+}
+
+footer .section-title h1{
+
+    color: rgb(255, 255, 255);
+    display:inline-block;
+    font-size: 15px;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding-bottom: 10px;
+}
+
+footer .section-title p{
+
+    font-size: 15px;
+    color: rgb(255, 255, 255);
+    font-weight: 400;
+    letter-spacing: 2px;
+    margin: 0 0 40px;
+    
 }
