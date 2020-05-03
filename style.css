@@ -489,6 +489,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .projects .project-gallery .item .overlay h1{
 
     color:  white;
+    text-align: center !important;
 }
 
 .projects .project-gallery .item .github-btn{
