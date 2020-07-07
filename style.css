@@ -410,6 +410,12 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 }
 
+
+
+
+
+
+
 .projects{
     
     padding: 100px 15px;
@@ -526,6 +532,124 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     background-color: white;
     color: rgba(0, 0, 0, 0);
 }
+
+
+
+
+
+
+
+.painting{
+    
+    padding: 100px 15px;
+    
+}
+
+.text-center{
+
+    text-align: center !important; /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+}
+
+.painting .section-title{
+    width: 100%; /*must need if i want to put text at the center*/
+}
+
+.painting .section-title h1{
+
+    display:inline-block;
+    font-size: 35px;
+    text-transform: uppercase;
+    font-weight: 600;
+    
+}
+
+.painting .section-title p{
+    text-transform: uppercase;
+    font-size: 15px;
+    color: rgb(109, 109, 109);
+    font-weight: 400;
+    letter-spacing: 2px;
+    margin: 0 0 40px;
+    
+}
+
+
+.painting .painting-gallery{
+    position: relative;
+    overflow:hidden;
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.painting .painting-gallery .gallery-slider{
+
+    flex: 0 0 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    float:left;
+    
+	transition: margin 1s ease;
+}
+
+.painting .painting-gallery .gallery-slider .item{
+
+    float: left;
+    position: relative;
+    margin: 0 50px 0 50px;
+}
+
+.painting .painting-gallery .gallery-slider .item img{
+
+    width: 100%;
+    display: block;
+    
+}
+
+.painting .painting-gallery .gallery-slider .item .overlay{
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 10;
+
+
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    
+}
+
+
+.painting .painting-gallery .item .overlay h1{
+
+    color:  rgb(83, 83, 83);
+    text-align: justify !important;
+    font-size: 8px;
+}
+
+.painting .painting-gallery .slide-controls{
+	float:left;
+	width: 100%;
+	text-align: center;
+}
+.painting .painting-gallery .slide-controls div{
+	height: 15px;
+	width: 15px;
+	background-color: #ffffff;
+	border-radius:50%;
+	border:1px solid #febd01;
+	display: inline-block;
+	margin:10px 6px;
+	cursor: pointer;
+}
+.painting .painting-gallery .slide-controls div.active{
+  background-color: #febd01;
+}
+
+
 
 
 
