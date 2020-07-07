@@ -12,7 +12,8 @@ let slideDots;
 // responsive
 const responsive=[
         {breakPoint:{width:0,item:1}},
-        {breakPoint:{width:991,item:2}} 
+        {breakPoint:{width:991,item:2}} ,
+        {breakPoint:{width:1300,item:3}}
      ]        
 
 function load(){

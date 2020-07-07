@@ -541,7 +541,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 .painting{
     
-    padding: 100px 15px;
+    padding: 30px 15px;
     
 }
 
@@ -573,12 +573,17 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     
 }
 
-
+.painting .display-row{
+    text-align: center;
+    
+}
 .painting .painting-gallery{
     position: relative;
     overflow:hidden;
-    flex: 0 0 100%;
-    max-width: 100%;
+    flex: 0 0 70%;
+    max-width: 70%;
+    display: inline-block;
+    
 }
 
 .painting .painting-gallery .gallery-slider{
@@ -596,7 +601,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
     float: left;
     position: relative;
-    margin: 0 50px 0 50px;
+
 }
 
 .painting .painting-gallery .gallery-slider .item img{
@@ -614,10 +619,8 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     bottom: 0;
     right: 0;
     z-index: 10;
-
-
+    justify-content: flex-end;
     display: flex;
-    flex-wrap: nowrap;
     flex-direction: column;
     
 }
