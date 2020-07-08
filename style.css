@@ -588,7 +588,10 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     align-items: center;
     float:left;
     
-	transition: margin 1s ease;
+    transition: margin 1s ease; 
+    /*1s: duration
+    ease : specifies a transition effect with a slow start, then fast, then end slowly 
+    */
 }
 
 .painting .painting-gallery .gallery-slider .item{
