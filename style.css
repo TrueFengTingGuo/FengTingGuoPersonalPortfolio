@@ -456,8 +456,6 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     max-width: 100%;
     display: flex;
     flex-wrap: wrap; /*wrap CSS property sets whether flex items are forced onto one line or can wrap onto multiple lines. If wrapping is allowed, it sets the direction that lines are stacked.*/
-
-
     justify-content: space-around;
 }
 
@@ -573,16 +571,12 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     
 }
 
-.painting .display-row{
-    text-align: center;
-    
-}
 .painting .painting-gallery{
     position: relative;
     overflow:hidden;
     flex: 0 0 70%;
     max-width: 70%;
-    display: inline-block;
+    margin: 0 auto; /* auto keep it at the center (dont need parent)*/
     
 }
 
