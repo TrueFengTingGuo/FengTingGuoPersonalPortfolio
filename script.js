@@ -40,7 +40,10 @@ function start(){
     //set width of each image
     for(let i=0; i<slides.length; i++){
         slides[i].style.width = (containerWidth/itemPerSlide)-margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
-       	slides[i].style.margin = margin/2 + "px"; //  set margin to all four values of the margin
+        slides[i].style.margin = margin/2 + "px"; //  set margin to all four values of the margin
+           
+        console.log(totalWidth);
+
         totalWidth += containerWidth/itemPerSlide;
     }
 
