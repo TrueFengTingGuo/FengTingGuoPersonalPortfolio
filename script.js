@@ -44,7 +44,7 @@ function start(){
         totalWidth += containerWidth/itemPerSlide;
     }
 
-   // sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
+    sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
 
     slideDots=Math.ceil(slides.length/itemPerSlide); //calculate how many dots need to display at the bottom
 
