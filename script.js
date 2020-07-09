@@ -4,7 +4,7 @@
 const paintingGallery = document.querySelector(".painting-gallery"); //find gallery-slider from index.html
 const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
 const slides = sliderContainer.children;
-const containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
+let containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
 const paintingGalleryWidth = paintingGallery.clientWidth; //width of the gallery-slider div
 
 /**
@@ -71,6 +71,7 @@ function start(){
 
     sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
 
+
     slideDots=Math.ceil(slides.length/itemPerSlide); //calculate how many dots need to display at the bottom
 
     //slide dot creation process
@@ -109,7 +110,7 @@ function changeSlide(currentSlide){
       
  	controlButtons[currentSlide].classList.add("active")
 
- 	sliderContainer.style.marginLeft=-(containerWidth*currentSlide) + "px"; //set the style, the transition property will then trans to the proper position
+ 	sliderContainer.style.marginLeft=-(paintingGalleryWidth*currentSlide) + "px"; //set the style, the transition property will then trans to the proper position
 }
 
 //autp play the slide
