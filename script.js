@@ -62,7 +62,7 @@ function start(){
            
         
 
-        totalWidth += containerWidth/itemPerSlide;
+        totalWidth += paintingGalleryWidth/itemPerSlide;
 
         console.log("itemPerSlide" + itemPerSlide);
         console.log("containerWidth" +containerWidth);
