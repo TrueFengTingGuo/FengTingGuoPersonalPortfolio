@@ -1,10 +1,11 @@
 
 
 //painting slider
+const paintingGallery = document.querySelector(".painting-gallery"); //find gallery-slider from index.html
 const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
 const slides = sliderContainer.children;
 const containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
-
+const paintingGalleryWidth = paintingGallery.clientWidth; //width of the gallery-slider div
 
 /**
  * Finding width of a html element:
@@ -56,7 +57,7 @@ function start(){
 
     //set width of each image
     for(let i=0; i<slides.length; i++){
-        slides[i].style.width = (containerWidth/itemPerSlide)-margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
+        slides[i].style.width = (paintingGalleryWidth/itemPerSlide)-margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
         slides[i].style.margin = margin/2 + "px"; //  set margin to all four values of the margin
            
         
