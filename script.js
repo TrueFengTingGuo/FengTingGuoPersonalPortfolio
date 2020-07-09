@@ -20,6 +20,7 @@ const responsive=[ //save an dictionary for how many image to display on one sli
 
 function load(){
 
+
     sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
     slides = sliderContainer.children;
     containerWidth = sliderContainer.offsetWidth; //width of the gallery-slider div
