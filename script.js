@@ -64,9 +64,6 @@ function start(){
 
         totalWidth += paintingGalleryWidth/itemPerSlide;
 
-        console.log("itemPerSlide" + itemPerSlide);
-        console.log("containerWidth" +containerWidth);
-        console.log("totalWidth" +totalWidth);
     }
 
     sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
