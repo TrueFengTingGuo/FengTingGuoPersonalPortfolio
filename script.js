@@ -3,7 +3,7 @@
 //painting slider
 const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
 const slides = sliderContainer.children;
-const containerWidth = sliderContainer.offsetWidth; //width of the gallery-slider div
+const containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
 const margin=30;
 
 let itemPerSlide=0; //how many images it can display in one slide
