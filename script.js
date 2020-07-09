@@ -1,7 +1,6 @@
 
 
 //painting slider
-
 const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
 const slides = sliderContainer.children;
 const containerWidth = sliderContainer.offsetWidth; //width of the gallery-slider div
@@ -45,7 +44,6 @@ function start(){
         slides[i].style.margin = margin/2 + "px"; //  set margin to all four values of the margin
            
         
-        
 
         totalWidth += containerWidth/itemPerSlide;
 
@@ -54,7 +52,7 @@ function start(){
         console.log("totalWidth" +totalWidth);
     }
 
-    //sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
+    sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
 
     slideDots=Math.ceil(slides.length/itemPerSlide); //calculate how many dots need to display at the bottom
 
