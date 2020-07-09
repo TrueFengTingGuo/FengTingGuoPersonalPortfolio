@@ -226,9 +226,9 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 /*About me*/
 .about-me{
-    padding: 100px 15px;
+    padding: 100px 15px 0 0;
     background-color: rgb(255, 255, 255);
-    margin-bottom: -30px;
+
 }
 
 .about-me .section-title{
@@ -334,7 +334,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 .skills{
-    padding: 50 px 15px;
+    padding: 50px 5px;
 }
 
 .skills .skills-content{
@@ -345,13 +345,16 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 }
 
 .align-items-center{
+    display: flex;
     align-items: center !important;;
+    justify-content: center;
+
 }
 
 .skills .img{
     flex: 0 0 30%;
     max-width: 30%;
-    margin-left: 85px;
+    margin-left: 35px;
 }
 
 .skills .img img{
