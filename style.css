@@ -576,7 +576,7 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     overflow:hidden;
     flex: 0 0 70%;
     max-width: 70%;
-    margin: auto; /* auto keep it at the center (dont need parent)*/
+   
     
 }
 
