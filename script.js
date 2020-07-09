@@ -4,6 +4,22 @@
 const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
 const slides = sliderContainer.children;
 const containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
+
+
+/**
+ * Finding width of a html element:
+ * 
+ * 
+ * offsetWidth: It returns the width of an HTML element including padding, 
+ * border and scrollbar in pixels but it does not include margin width. 
+ * If the element does not have any associated layout box then it returns zero.
+ * 
+ * 
+ * clientWidth: It returns the width of an HTML element including padding in pixels but does not include margin, 
+ * border and scrollbar width.
+ * 
+ */
+
 const margin=30;
 
 let itemPerSlide=0; //how many images it can display in one slide
