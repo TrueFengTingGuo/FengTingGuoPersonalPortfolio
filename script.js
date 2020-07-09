@@ -2,10 +2,10 @@
 
 //painting slider
 
-const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
-const slides = sliderContainer.children;
-const containerWidth = sliderContainer.offsetWidth; //width of the gallery-slider div
-const margin=30;
+let sliderContainer; //find gallery-slider from index.html
+let slides;
+let containerWidth; //width of the gallery-slider div
+let margin;
 
 let itemPerSlide=0; //how many images it can display in one slide
 let slideDots;
@@ -19,6 +19,12 @@ const responsive=[ //save an dictionary for how many image to display on one sli
      ]        
 
 function load(){
+
+    sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
+    slides = sliderContainer.children;
+    containerWidth = sliderContainer.offsetWidth; //width of the gallery-slider div
+    margin=30;
+
     for(let i=0; i<responsive.length; i++){
 
         //loop through all min width to find the best itemPerSlide value
