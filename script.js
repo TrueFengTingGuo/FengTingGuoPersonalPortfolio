@@ -42,9 +42,14 @@ function start(){
         slides[i].style.width = (containerWidth/itemPerSlide)-margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
         slides[i].style.margin = margin/2 + "px"; //  set margin to all four values of the margin
            
-        console.log(totalWidth);
+        
+        
 
         totalWidth += containerWidth/itemPerSlide;
+
+        console.log("itemPerSlide" + itemPerSlide);
+        console.log("containerWidth" +containerWidth);
+        console.log("totalWidth" +totalWidth);
     }
 
     sliderContainer.style.width=totalWidth + "px"; //set the width of the displace div 
