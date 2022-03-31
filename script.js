@@ -128,7 +128,7 @@ function autoPlay(){
 
 
 
-let timer=setInterval(autoPlay,5000);
+let timer=setInterval(autoPlay,2000);
 
 window.onload = load();
 
