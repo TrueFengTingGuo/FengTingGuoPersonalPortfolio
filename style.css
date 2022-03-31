@@ -577,8 +577,8 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 .painting .painting-gallery{
     position: relative;
     overflow:hidden;
-    flex: 0 0 70%;
-    max-width: 70%;
+    flex: 0 0 80%;
+    max-width: 80%;
     margin: auto; /* You can set the margin property to auto to horizontally center the element within its container.*/
     
 }
