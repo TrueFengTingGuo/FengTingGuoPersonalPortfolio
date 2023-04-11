@@ -47,8 +47,9 @@ function load(){
     	}
 
     }
-
+    generateGallery();
     start(); //go to start function
+
 }
 
 function start(){
@@ -124,7 +125,35 @@ function autoPlay(){
 }
 
 
+function generateGallery(){
 
+    // Array of image filenames
+	const imageFiles = ["girl3","purple1","flower1","dog1","horse1", "girl2","car2",
+    "Flower and girl", "Fruit", "Bird", "Chris Hemsworth",
+    "Deer", "Elden Ring", "Girl Portarit 2", "Girl Portrait" ,"Man In Car","Red Car",
+    "red lady", "simple women"];
+
+
+	// Get a reference to the gallery container
+	const gallery = document.querySelector('.gallery-slider');
+
+     	// String template for each item
+	const itemTemplate = 
+    '<div class="item"> ' +
+        '<img src="Images/{directory}.jpg" alt="painting">' +
+        ' <div class="overlay">'+
+               '<h1>Refence found from internet</h1>' + 
+         '</div>'+
+    ' </div>';
+
+	// Loop through the array of image filenames and create an <img> tag for each one
+    let html = '';
+	for (let i = 0; i < imageFiles.length; i++) {   
+         const itemHtml = itemTemplate.replace('{directory}', imageFiles[i]);
+		html += itemHtml;
+	}
+    gallery.innerHTML += html;
+}
 
 
 
