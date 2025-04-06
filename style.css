@@ -332,6 +332,9 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 }
 
 
+.work-content{
+    margin-left: 15px;
+}
 
 .skills{
     padding: 50px 5px;
