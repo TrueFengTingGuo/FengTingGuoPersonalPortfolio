@@ -707,3 +707,56 @@ footer .section-title p{
     margin: 0 0 40px;
     
 }
+
+/* ---- Cat Pet ---- */
+#pet {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    width: 70px;
+    height: 88px;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
+    transition: transform 0.08s ease;
+    will-change: left, top, transform;
+}
+
+.pet-inner {
+    width: 100%;
+    height: 100%;
+}
+
+.pet-inner.walking {
+    animation: cat-walk 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes cat-walk {
+    from { transform: translateY(0px) rotate(-4deg); }
+    to   { transform: translateY(-7px) rotate(4deg); }
+}
+
+.cat-tail {
+    animation: tail-wag 1.1s ease-in-out infinite alternate;
+    transform-origin: 56px 80px;
+    transform-box: fill-box;
+}
+
+@keyframes tail-wag {
+    from { transform: rotate(-10deg); }
+    to   { transform: rotate(10deg); }
+}
+
+.cat-eye-left,
+.cat-eye-right {
+    animation: cat-blink 4s ease-in-out infinite;
+    transform-origin: center;
+    transform-box: fill-box;
+}
+
+.cat-eye-right {
+    animation-delay: 0.08s;
+}
+
+@keyframes cat-blink {
+    0%, 88%, 100% { transform: scaleY(1); }
+    93%           { transform: scaleY(0.06); }
+}

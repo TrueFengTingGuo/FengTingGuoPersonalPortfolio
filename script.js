@@ -172,6 +172,7 @@ window.onload = load;
  // header fixed
 
  window.onscroll=function(){
+
     const docScrollTop=document.documentElement.scrollTop;
 
     if(window.innerWidth>991){
@@ -183,6 +184,110 @@ window.onload = load;
         }
     }
 }    
+
+// ---- Cat Pet ----
+(function () {
+    const pet     = document.getElementById('pet');
+    const inner   = pet.querySelector('.pet-inner');
+
+    const CAT_W   = 70;
+    const CAT_H   = 88;
+
+    // starting position: near centre of viewport
+    let catX = window.innerWidth  / 2 - CAT_W / 2;
+    let catY = window.innerHeight / 2 - CAT_H / 2;
+    let vx   = 0;
+    let vy   = 0;
+
+    let mouseX       = catX + CAT_W / 2;
+    let mouseY       = catY + CAT_H / 2;
+    let lastMoveTime = 0;
+
+    let wanderAngle = Math.random() * Math.PI * 2;
+    let wanderTimer = 0;
+    let lastFlip    = 1;   // 1 = face right, -1 = face left
+    let lastTime    = null;
+
+    window.addEventListener('mousemove', function (e) {
+        mouseX       = e.clientX;
+        mouseY       = e.clientY;
+        lastMoveTime = Date.now();
+    });
+
+    function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const dt  = Math.min((timestamp - lastTime) / 1000, 0.05); // seconds, capped
+        lastTime  = timestamp;
+
+        const now       = Date.now();
+        const isChasing = (now - lastMoveTime) < 1500;
+        const maxX      = window.innerWidth  - CAT_W;
+        const maxY      = window.innerHeight - CAT_H;
+
+        if (isChasing) {
+            // ---- Chase mode ----
+            const dx   = mouseX - (catX + CAT_W / 2);
+            const dy   = mouseY - (catY + CAT_H / 2);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 8) {
+                const speed = 260;
+                vx += (dx / dist * speed - vx) * 9 * dt;
+                vy += (dy / dist * speed - vy) * 9 * dt;
+            } else {
+                vx *= 0.75;
+                vy *= 0.75;
+            }
+        } else {
+            // ---- Wander mode ----
+            wanderTimer -= dt;
+            if (wanderTimer <= 0) {
+                wanderAngle = Math.random() * Math.PI * 2;
+                wanderTimer = 1.8 + Math.random() * 2.2;
+            }
+            const wSpeed = 55;
+            vx += (Math.cos(wanderAngle) * wSpeed - vx) * 2.5 * dt;
+            vy += (Math.sin(wanderAngle) * wSpeed - vy) * 2.5 * dt;
+        }
+
+        catX += vx * dt;
+        catY += vy * dt;
+
+        // Bounce off viewport edges
+        if (catX < 0)    { catX = 0;    vx =  Math.abs(vx); wanderAngle = Math.atan2(vy,  Math.abs(vx)); }
+        if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); wanderAngle = Math.atan2(vy, -Math.abs(vx)); }
+        if (catY < 0)    { catY = 0;    vy =  Math.abs(vy); wanderAngle = Math.atan2( Math.abs(vy), vx); }
+        if (catY > maxY) { catY = maxY; vy = -Math.abs(vy); wanderAngle = Math.atan2(-Math.abs(vy), vx); }
+
+        // Apply position
+        pet.style.left = catX + 'px';
+        pet.style.top  = catY + 'px';
+
+        // Flip to face direction of travel
+        if      (vx >  3) lastFlip =  1;
+        else if (vx < -3) lastFlip = -1;
+        pet.style.transform = 'scaleX(' + lastFlip + ')';
+
+        // Walk bob animation
+        const spd = Math.sqrt(vx * vx + vy * vy);
+        if (spd > 12) {
+            inner.classList.add('walking');
+        } else {
+            inner.classList.remove('walking');
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    // Kick off after page load so the cat starts at a sensible spot
+    window.addEventListener('load', function () {
+        catX = window.innerWidth  / 2 - CAT_W / 2;
+        catY = window.innerHeight / 2 - CAT_H / 2;
+        pet.style.left = catX + 'px';
+        pet.style.top  = catY + 'px';
+        requestAnimationFrame(loop);
+    });
+})();
+
 
 
 
