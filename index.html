@@ -319,50 +319,41 @@
 </footer>
 <!-- End Footer -->
 
-<script src="script.js"></script>
-
 <!-- Cat Pet -->
 <div id="pet">
   <div class="pet-inner">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" width="70" height="88">
-      <!-- Tail -->
-      <path class="cat-tail" d="M56,80 Q74,68 70,52 Q66,38 75,32" stroke="#bbb" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 110" width="56" height="77">
+      <!-- Tail (curves to the side, top-down view) -->
+      <path class="cat-tail" d="M40,97 Q54,108 62,100 Q69,90 61,81" stroke="#bbb" stroke-width="4" fill="none" stroke-linecap="round"/>
       <!-- Body -->
-      <ellipse cx="38" cy="76" rx="22" ry="16" fill="white" stroke="#bbb" stroke-width="1.5"/>
-      <!-- Head -->
-      <circle cx="38" cy="40" r="22" fill="white" stroke="#bbb" stroke-width="1.5"/>
-      <!-- Left Ear outer -->
-      <polygon points="20,24 16,6 30,20" fill="white" stroke="#bbb" stroke-width="1.5" stroke-linejoin="round"/>
-      <!-- Left Ear inner -->
-      <polygon points="21,21 18,10 27,20" fill="#f4b8c1"/>
-      <!-- Right Ear outer -->
-      <polygon points="46,20 54,6 58,24" fill="white" stroke="#bbb" stroke-width="1.5" stroke-linejoin="round"/>
-      <!-- Right Ear inner -->
-      <polygon points="47,20 53,10 56,21" fill="#f4b8c1"/>
-      <!-- Left Eye -->
-      <ellipse class="cat-eye-left" cx="30" cy="40" rx="5" ry="5.5" fill="#2a2a2a"/>
-      <circle cx="31.8" cy="38" r="1.8" fill="white"/>
-      <!-- Right Eye -->
-      <ellipse class="cat-eye-right" cx="46" cy="40" rx="5" ry="5.5" fill="#2a2a2a"/>
-      <circle cx="47.8" cy="38" r="1.8" fill="white"/>
-      <!-- Nose -->
-      <polygon points="38,46 35.5,49.5 40.5,49.5" fill="#f4a0a8"/>
-      <!-- Mouth -->
-      <path d="M35.5,49.5 Q38,53 40.5,49.5" stroke="#bbb" stroke-width="1" fill="none" stroke-linecap="round"/>
-      <!-- Left Whiskers -->
-      <line x1="15" y1="44" x2="33" y2="47" stroke="#ccc" stroke-width="0.9"/>
-      <line x1="13" y1="47.5" x2="33" y2="47.5" stroke="#ccc" stroke-width="0.9"/>
-      <line x1="15" y1="51" x2="33" y2="48" stroke="#ccc" stroke-width="0.9"/>
-      <!-- Right Whiskers -->
-      <line x1="61" y1="44" x2="43" y2="47" stroke="#ccc" stroke-width="0.9"/>
-      <line x1="63" y1="47.5" x2="43" y2="47.5" stroke="#ccc" stroke-width="0.9"/>
-      <line x1="61" y1="51" x2="43" y2="48" stroke="#ccc" stroke-width="0.9"/>
-      <!-- Front Paws -->
-      <ellipse cx="27" cy="90" rx="8" ry="5" fill="white" stroke="#bbb" stroke-width="1.5"/>
-      <ellipse cx="49" cy="90" rx="8" ry="5" fill="white" stroke="#bbb" stroke-width="1.5"/>
+      <ellipse cx="40" cy="71" rx="17" ry="27" fill="white" stroke="#bbb" stroke-width="1.5"/>
+      <!-- Front left paw -->
+      <ellipse cx="16" cy="55" rx="9" ry="5" fill="white" stroke="#bbb" stroke-width="1.5" transform="rotate(35,16,55)"/>
+      <!-- Front right paw -->
+      <ellipse cx="64" cy="55" rx="9" ry="5" fill="white" stroke="#bbb" stroke-width="1.5" transform="rotate(-35,64,55)"/>
+      <!-- Back left paw -->
+      <ellipse cx="17" cy="87" rx="9" ry="5" fill="white" stroke="#bbb" stroke-width="1.5" transform="rotate(-25,17,87)"/>
+      <!-- Back right paw -->
+      <ellipse cx="63" cy="87" rx="9" ry="5" fill="white" stroke="#bbb" stroke-width="1.5" transform="rotate(25,63,87)"/>
+      <!-- Head (top of skull, viewed from above) -->
+      <circle cx="40" cy="27" r="19" fill="white" stroke="#bbb" stroke-width="1.5"/>
+      <!-- Left ear outer -->
+      <polygon points="24,15 17,2 32,13" fill="white" stroke="#bbb" stroke-width="1.5" stroke-linejoin="round"/>
+      <!-- Left ear inner -->
+      <polygon points="25,14 20,5 30,13" fill="#f4b8c1"/>
+      <!-- Right ear outer -->
+      <polygon points="56,15 63,2 48,13" fill="white" stroke="#bbb" stroke-width="1.5" stroke-linejoin="round"/>
+      <!-- Right ear inner -->
+      <polygon points="55,14 60,5 50,13" fill="#f4b8c1"/>
+      <!-- Fur tuft at crown -->
+      <path d="M37,14 Q40,10 43,14" stroke="#ccc" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <!-- Subtle head crease (forehead line) -->
+      <path d="M36,22 Q40,19 44,22" stroke="#ddd" stroke-width="0.8" fill="none" stroke-linecap="round"/>
     </svg>
   </div>
 </div>
+
+<script src="script.js"></script>
 
 </body>
 </html>

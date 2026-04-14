@@ -1,152 +1,167 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
- 
-html{
+
+html {
     scroll-behavior: smooth;
 }
-body{
+
+body {
     margin: 0;
-    font-family: 'Poppins', sans-serif; 
+    font-family: 'Poppins', sans-serif;
 }
 
-*{
+* {
     box-sizing: border-box;
     margin: 0;
 }
 
-.container{
+.container {
     max-width: 1140px;
     margin: auto;
 
 }
 
-.row{
-    display: flex; /*The flex container becomes flexible by setting the display property to flex:*/
+.row {
+    display: flex;
+    /*The flex container becomes flexible by setting the display property to flex:*/
     flex-wrap: wrap;
 
 }
 
 
 
-.font-10{
+.font-10 {
     font-size: 10px;
 }
 
-.font-13{
+.font-13 {
     font-size: 13px;
 }
 
-.font-15{
+.font-15 {
     font-size: 15px;
 }
 
-.font-20{
+.font-20 {
     font-size: 20px;
 }
 
-.font-25{
+.font-25 {
     font-size: 25px;
 }
 
-.font-30{
+.font-30 {
     font-size: 30px;
 }
 
-.bold-font{
+.bold-font {
     font-weight: bold;
 }
 
-.grey-font{
+.grey-font {
     font-weight: 400;
     color: rgb(124, 124, 124);
     margin: 0;
 }
 
 
-header{
-    position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
+header {
+    position: absolute;
+    /*The element is positioned relative to its first positioned (not static) ancestor element*/
     left: 0px;
-    right:0px;
+    right: 0px;
     border-bottom: 1px solid #423940;
-    background-color: rgba(85, 54, 54, 0.3);  
+    background-color: rgba(85, 54, 54, 0.3);
     padding: 0px 15px;
-    z-index: 10; /* property specifies the stack order of an element.*/
-    
+    z-index: 10;
+    /* property specifies the stack order of an element.*/
+
 }
 
-header .fixed{
+header .fixed {
 
-    border-color: rgb(255, 255, 255); 
+    border-color: rgb(255, 255, 255);
     position: fixed;
 }
 
-header .row{
+header .row {
 
     justify-content: space-between;
-    align-items: center; /*grounp children in the center*/
+    align-items: center;
+    /*grounp children in the center*/
 }
 
-header .brand-name a{
+header .brand-name a {
     text-decoration: none;
-    font-size:  22px;
+    font-size: 22px;
     font-weight: 600;
     color: white;
     text-transform: uppercase;
-    position: relative; /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
+    position: relative;
+    /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
 
 }
 
-header .fixed .brand-name a{
+header .fixed .brand-name a {
 
     color: white;
 
 
 }
 
-header .navbar ul{ /*list container mod*/
+header .navbar ul {
+    /*list container mod*/
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-header .navbar ul li{
-    display: inline-block; /*one row table*/
+header .navbar ul li {
+    display: inline-block;
+    /*one row table*/
     margin-left: 35px;
 }
 
-header .navbar ul li a{
+header .navbar ul li a {
     font-size: 20px;
-    text-decoration: none; /*Sets the kind of text decoration to use (like underline, overline, line-through)*/
+    text-decoration: none;
+    /*Sets the kind of text decoration to use (like underline, overline, line-through)*/
     line-height: 72px;
     color: white;
-    display: block; /*Displays an element as a block element (like <p>). It starts on a new line, and takes up the whole width*/
+    display: block;
+    /*Displays an element as a block element (like <p>). It starts on a new line, and takes up the whole width*/
     font-weight: 600;
     position: relative;
 }
 
-header .navbar ul li a::before{ /* inserts something before the content of each selected element(s).*/
+header .navbar ul li a::before {
+    /* inserts something before the content of each selected element(s).*/
     content: '';
     height: 3px;
     background-color: white;
     width: 0%;
-    position: absolute; /*The element is positioned relative to its first positioned (not static) ancestor element*/
+    position: absolute;
+    /*The element is positioned relative to its first positioned (not static) ancestor element*/
     left: 0px;
     bottom: 0px;
     transition: all 0.2s ease;
 
 }
 
-header .fixed .navbar ul li a{
+header .fixed .navbar ul li a {
     position: fixed;
 }
 
-header .navbar ul li a:hover:before{ 
+header .navbar ul li a:hover:before {
     width: 100%;
-    left:0; /*wired bug where there is some left over white line*/
+    left: 0;
+    /*wired bug where there is some left over white line*/
 }
 
-header .navbar ul li a.active::before{  /*A link becomes active when you click on it.*/
+header .navbar ul li a.active::before {
+    /*A link becomes active when you click on it.*/
     width: 100%;
-    left:0; /*wired bug where there is some left over white line*/
+    left: 0;
+    /*wired bug where there is some left over white line*/
 }
 
 
@@ -155,93 +170,104 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 /*Home*/
 
-.home{
-    min-height: 100vh; /*Relative to 1% of the height of the viewport**/
+.home {
+    min-height: 100vh;
+    /*Relative to 1% of the height of the viewport**/
     background-image: url("Images/Fruit.jpg");
     background-size: cover;
     background-position: center;
-    padding:15px;
+    padding: 15px;
 }
 
-.home .full-screen{
+.home .full-screen {
 
     min-height: 100vh;
-    
+
 }
 
-.home .home-content{
+.home .home-content {
 
-    flex: 0 0 100%; /*flex has 3 property  flex-grow flex-shrink flex-basis;*/
+    flex: 0 0 100%;
+    /*flex has 3 property  flex-grow flex-shrink flex-basis;*/
     /*flex-grow A number specifying how much the item will grow relative to the rest of the flexible items*/
     /*flex-shrink 	A number specifying how much the item will shrink relative to the rest of the flexible items*/
     /*flex-basis 	The length of the item. Legal values: "auto", "inherit", or a number followed by "%", "px", "em" or any other length unit*/
     max-width: 100%;
-    display:flex;
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
-    
+
 }
 
-.home .home-content .block{
+.home .home-content .block {
 
 
-    flex:0 0 75%;
-    max-width:75% ;
+    flex: 0 0 75%;
+    max-width: 75%;
     padding-left: 20px;
     border-left: 5px solid white;
 
-    
+
 }
-.home .home-content .block h6{
+
+.home .home-content .block h6 {
 
     color: white;
     font-size: 25px;
-    font-weight: 500; /*imported font*/
-    margin: 0;  /*properties are used to create space around elements, outside of any defined borders. top right bottom  left*/ 
+    font-weight: 500;
+    /*imported font*/
+    margin: 0;
+    /*properties are used to create space around elements, outside of any defined borders. top right bottom  left*/
     padding: 0;
-    
+
 }
-.home .home-content .block h1{
+
+.home .home-content .block h1 {
 
     color: white;
     font-size: 65px;
-    font-weight: 600; /*imported font*/
+    font-weight: 600;
+    /*imported font*/
 
     padding: 0;
-    
+
 }
-.home .home-content .block h3{
+
+.home .home-content .block h3 {
 
     color: white;
     font-size: 30px;
-    font-weight: 500; /*imported font*/
+    font-weight: 500;
+    /*imported font*/
     margin: 0;
     padding: 0;
-    
+
 }
 
-.home .home-content .block .github-btn{
+.home .home-content .block .github-btn {
 
     padding-top: 10px;
 }
 
 
-.home .home-content .block .github-btn a{
+.home .home-content .block .github-btn a {
 
     border-radius: 10px;
     color: white;
-    border:3px solid white;
+    border: 3px solid white;
     padding: 10px 25px;
     text-decoration: none;
     display: inline-block;
     font-size: 15px;
-    font-weight: 600; /*imported font*/
+    font-weight: 600;
+    /*imported font*/
 
-    transition: all .2s ease; /*CSS transitions allows you to change property values smoothly, over a given duration.*/
+    transition: all .2s ease;
+    /*CSS transitions allows you to change property values smoothly, over a given duration.*/
     background-color: transparent;
 }
 
-.home .home-content .block .github-btn a:hover{
+.home .home-content .block .github-btn a:hover {
 
     background-image: url("Images/GitHub-Mark.png");
     background-repeat: no-repeat;
@@ -257,31 +283,31 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 /*About me*/
-.about-me{
+.about-me {
     padding: 100px 15px 0 0;
     background-color: rgb(255, 255, 255);
 
 }
 
-.about-me .section-title{
-    flex:0 0 100%;
+.about-me .section-title {
+    flex: 0 0 100%;
     max-width: 100%;
     margin: 0 0 10px;
     padding-bottom: 5px;
 }
 
-.about-me .section-title h1{
+.about-me .section-title h1 {
 
-    display:inline-block;
+    display: inline-block;
     font-size: 35px;
     text-transform: uppercase;
     font-weight: 600;
     margin: 0;
 }
 
-.about-me .section-title p{
+.about-me .section-title p {
 
-    display:block;
+    display: block;
     text-transform: uppercase;
     font-size: 15px;
     color: rgb(109, 109, 109);
@@ -291,143 +317,146 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 
-.about-me .about-content .img{
-    flex: 0 0 33%; /*resize the image*/
+.about-me .about-content .img {
+    flex: 0 0 33%;
+    /*resize the image*/
     max-width: 33%;
 }
 
-.about-me .about-content .img img{
+.about-me .about-content .img img {
     width: 100%;
     display: block;
 
 
 }
 
-.about-me .about-content .text{
+.about-me .about-content .text {
     flex: 0 0 66%;
     max-width: 66%;
     padding-left: 55px;
 }
 
-.about-me .about-content .text h4{
+.about-me .about-content .text h4 {
     font-size: 25px;
     font-weight: 600;
     margin: 0 0 5px;
 
 }
 
-.about-me .about-content .text h6{
+.about-me .about-content .text h6 {
     font-size: 16px;
     font-weight: 500;
     margin: 0 0 15px;
-    
+
 }
 
-.about-me .about-content .text h6 span{
+.about-me .about-content .text h6 span {
     color: rgb(255, 72, 0);
-    
+
 }
 
-.about-me .about-content .text p{
+.about-me .about-content .text p {
     font-size: 15px;
     font-weight: 400;
     color: rgb(124, 124, 124);
     margin: 0;
-    
+
 }
 
-.about-me .about-content .text .info{
+.about-me .about-content .text .info {
     display: flex;
     flex-wrap: wrap;
     margin: 20px 0;
-    
+
 }
 
-.about-me .about-content .label{
+.about-me .about-content .label {
 
     font-size: 20px;
     font-weight: bold;
 }
 
 
-.work-content{
+.work-content {
     margin-left: 35px;
     list-style: inside;
 }
 
-.skills{
+.skills {
     padding: 50px 5px;
 }
 
-.skills .skills-content{
+.skills .skills-content {
     flex: 0 0 50%;
     max-width: 50%;
     padding-right: 30px;
-    
+
 }
 
-.align-items-center{
+.align-items-center {
     display: flex;
-    align-items: center !important;;
+    align-items: center !important;
+    ;
     justify-content: center;
 
 }
 
-.skills .img{
+.skills .img {
     flex: 0 0 30%;
     max-width: 30%;
     margin-left: 35px;
 }
 
-.skills .img img{
+.skills .img img {
 
     width: 100%;
     display: block;
 }
 
-.skills .section-title p{
+.skills .section-title p {
     text-transform: uppercase;
     font-size: 15px;
     color: rgb(109, 109, 109);
     font-weight: 400;
     letter-spacing: 2px;
 
-    
+
 }
 
 .skills .skills-content {
     padding-left: 15px;
 
 }
-.skills .skills-content .skill-box{
+
+.skills .skills-content .skill-box {
     flex: 0 0 100%;
     max-width: 100%;
     margin-bottom: 35px;
 
 }
 
-.skills .skills-content .skill-box h6{
+.skills .skills-content .skill-box h6 {
     font-size: 15px;
     font-weight: 500;
     margin: 0 0 10px;
     color: #000000;
 }
 
-.skills .skills-content .skill-box .skill-bar{
-    
+.skills .skills-content .skill-box .skill-bar {
+
     background-color: rgb(202, 202, 202);
     height: 6px;
     position: relative;
 }
 
-.skills .skills-content .skill-box .skill-bar .skill-bar-in{
-    background-color:rgb(255, 137, 91);
+.skills .skills-content .skill-box .skill-bar .skill-bar-in {
+    background-color: rgb(255, 137, 91);
     height: 100%;
     position: absolute;
 
 }
 
-.skills .skills-content .skill-box .skill-bar .skill-bar-in span{
+.skills .skills-content .skill-box .skill-bar .skill-bar-in span {
     position: absolute;
     font-size: 16px;
     font-weight: 400;
@@ -441,50 +470,53 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 
-.projects{
-    
+.projects {
+
     padding: 100px 15px;
-    
+
 }
 
-.text-center{
+.text-center {
 
-    text-align: center !important; /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+    text-align: center !important;
+    /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
 }
 
-.projects .section-title{
-    width: 100%; /*must need if i want to put text at the center*/
+.projects .section-title {
+    width: 100%;
+    /*must need if i want to put text at the center*/
 }
 
-.projects .section-title h1{
+.projects .section-title h1 {
 
-    display:inline-block;
+    display: inline-block;
     font-size: 35px;
     text-transform: uppercase;
     font-weight: 600;
-    
+
 }
 
-.projects .section-title p{
+.projects .section-title p {
     text-transform: uppercase;
     font-size: 15px;
     color: rgb(109, 109, 109);
     font-weight: 400;
     letter-spacing: 2px;
     margin: 0 0 40px;
-    
+
 }
 
-.projects .project-gallery{
+.projects .project-gallery {
 
     flex: 0 0 100%;
     max-width: 100%;
     display: flex;
-    flex-wrap: wrap; /*wrap CSS property sets whether flex items are forced onto one line or can wrap onto multiple lines. If wrapping is allowed, it sets the direction that lines are stacked.*/
+    flex-wrap: wrap;
+    /*wrap CSS property sets whether flex items are forced onto one line or can wrap onto multiple lines. If wrapping is allowed, it sets the direction that lines are stacked.*/
     justify-content: space-around;
 }
 
-.projects .project-gallery .item{
+.projects .project-gallery .item {
 
     flex: 0 0 calc(33% - 10px);
     max-width: calc(33% - 10px);
@@ -492,14 +524,14 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     margin-bottom: 20px;
 }
 
-.projects .project-gallery .item img{
+.projects .project-gallery .item img {
 
     width: 100%;
     display: block;
-    
+
 }
 
-.projects .project-gallery .item .overlay{
+.projects .project-gallery .item .overlay {
 
     position: absolute;
     left: 0;
@@ -517,34 +549,36 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 }
 
 
-.projects .project-gallery .item .overlay h1{
+.projects .project-gallery .item .overlay h1 {
 
-    color:  white;
+    color: white;
     text-align: center !important;
 }
 
-.projects .project-gallery .item .github-btn{
+.projects .project-gallery .item .github-btn {
 
     padding-top: 10px;
 }
 
 
-.projects .project-gallery .item .github-btn a{
+.projects .project-gallery .item .github-btn a {
 
     border-radius: 10px;
     color: white;
-    border:3px solid white;
+    border: 3px solid white;
     padding: 10px 25px;
     text-decoration: none;
     display: inline-block;
     font-size: 15px;
-    font-weight: 600; /*imported font*/
+    font-weight: 600;
+    /*imported font*/
 
-    transition: all .2s ease; /*CSS transitions allows you to change property values smoothly, over a given duration.*/
+    transition: all .2s ease;
+    /*CSS transitions allows you to change property values smoothly, over a given duration.*/
     background-color: transparent;
 }
 
-.projects .project-gallery .item .github-btn a:hover{
+.projects .project-gallery .item .github-btn a:hover {
 
     background-image: url("Images/GitHub-Mark.png");
     background-repeat: no-repeat;
@@ -562,78 +596,81 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
 
 
 
-.painting{
-    
+.painting {
+
     padding: 30px 15px;
-    
+
 }
 
-.text-center{
+.text-center {
 
-    text-align: center !important; /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+    text-align: center !important;
+    /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
 }
 
-.painting .section-title{
-    width: 100%; /*must need if i want to put text at the center*/
+.painting .section-title {
+    width: 100%;
+    /*must need if i want to put text at the center*/
 }
 
-.painting .section-title h1{
+.painting .section-title h1 {
 
-    display:inline-block;
+    display: inline-block;
     font-size: 35px;
     text-transform: uppercase;
     font-weight: 600;
-    
+
 }
 
-.painting .section-title p{
+.painting .section-title p {
     text-transform: uppercase;
     font-size: 15px;
     color: rgb(109, 109, 109);
     font-weight: 400;
     letter-spacing: 2px;
     margin: 0 0 40px;
-    
+
 }
 
-.painting .painting-gallery{
+.painting .painting-gallery {
     position: relative;
-    overflow:hidden;
+    overflow: hidden;
     flex: 0 0 80%;
     max-width: 80%;
-    margin: auto; /* You can set the margin property to auto to horizontally center the element within its container.*/
-    
+    margin: auto;
+    /* You can set the margin property to auto to horizontally center the element within its container.*/
+
 }
 
-.painting .painting-gallery .gallery-slider{
+.painting .painting-gallery .gallery-slider {
 
     flex: 0 0 100%;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    float:left;
-    
-    transition: margin 1s ease; 
+    float: left;
+
+    transition: margin 1s ease;
     /*1s: duration
     ease : specifies a transition effect with a slow start, then fast, then end slowly 
     */
 }
 
-.painting .painting-gallery .gallery-slider .item{
+.painting .painting-gallery .gallery-slider .item {
 
     float: left;
     position: relative;
 
 }
 
-.painting .painting-gallery .gallery-slider .item img{
+.painting .painting-gallery .gallery-slider .item img {
 
     width: 100%;
     display: block;
-    
+
 }
 
-.painting .painting-gallery .gallery-slider .item .overlay{
+.painting .painting-gallery .gallery-slider .item .overlay {
 
     position: absolute;
     left: 0;
@@ -644,79 +681,83 @@ header .navbar ul li a.active::before{  /*A link becomes active when you click o
     justify-content: flex-end;
     display: flex;
     flex-direction: column;
-    
+
 }
 
 
-.painting .painting-gallery .item .overlay h1{
+.painting .painting-gallery .item .overlay h1 {
 
-    color:  rgb(83, 83, 83);
+    color: rgb(83, 83, 83);
     text-align: justify !important;
     font-size: 8px;
 }
 
-.painting .painting-gallery .slide-controls{
-	float:left;
-	width: 100%;
-	text-align: center;
-}
-.painting .painting-gallery .slide-controls div{
-	height: 15px;
-	width: 15px;
-	background-color: #ffffff;
-	border-radius:50%;
-	border:1px solid #febd01;
-	display: inline-block;
-	margin:10px 6px;
-	cursor: pointer;
-}
-.painting .painting-gallery .slide-controls div.active{
-  background-color: #febd01;
+.painting .painting-gallery .slide-controls {
+    float: left;
+    width: 100%;
+    text-align: center;
 }
 
+.painting .painting-gallery .slide-controls div {
+    height: 15px;
+    width: 15px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    border: 1px solid #febd01;
+    display: inline-block;
+    margin: 10px 6px;
+    cursor: pointer;
+}
+
+.painting .painting-gallery .slide-controls div.active {
+    background-color: #febd01;
+}
 
 
 
 
-footer{
-    
+
+footer {
+
     padding: 50px 15px;
     background-color: black;
 }
 
-footer .section-title{
-    width: 100%; /*must need if i want to put text at the center*/
+footer .section-title {
+    width: 100%;
+    /*must need if i want to put text at the center*/
 }
 
-footer .section-title h1{
+footer .section-title h1 {
 
     color: rgb(255, 255, 255);
-    display:inline-block;
+    display: inline-block;
     font-size: 15px;
     text-transform: uppercase;
     font-weight: 600;
     padding-bottom: 10px;
 }
 
-footer .section-title p{
+footer .section-title p {
 
     font-size: 15px;
     color: rgb(255, 255, 255);
     font-weight: 400;
     letter-spacing: 2px;
     margin: 0 0 40px;
-    
+
 }
 
 /* ---- Cat Pet ---- */
 #pet {
     position: fixed;
+    left: 0;
+    top: 0;
     z-index: 9999;
     pointer-events: none;
-    width: 70px;
-    height: 88px;
-    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
-    transition: transform 0.08s ease;
+    width: 56px;
+    height: 77px;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.40));
     will-change: left, top, transform;
 }
 
@@ -730,33 +771,29 @@ footer .section-title p{
 }
 
 @keyframes cat-walk {
-    from { transform: translateY(0px) rotate(-4deg); }
-    to   { transform: translateY(-7px) rotate(4deg); }
+    from {
+        transform: rotate(-4deg) scaleX(0.97);
+    }
+
+    to {
+        transform: rotate(4deg) scaleX(1.03);
+    }
 }
 
 .cat-tail {
     animation: tail-wag 1.1s ease-in-out infinite alternate;
-    transform-origin: 56px 80px;
-    transform-box: fill-box;
+    transform-origin: 40px 97px;
+    transform-box: view-box;
 }
 
 @keyframes tail-wag {
-    from { transform: rotate(-10deg); }
-    to   { transform: rotate(10deg); }
+    from {
+        transform: rotate(-22deg);
+    }
+
+    to {
+        transform: rotate(22deg);
+    }
 }
 
-.cat-eye-left,
-.cat-eye-right {
-    animation: cat-blink 4s ease-in-out infinite;
-    transform-origin: center;
-    transform-box: fill-box;
-}
-
-.cat-eye-right {
-    animation-delay: 0.08s;
-}
-
-@keyframes cat-blink {
-    0%, 88%, 100% { transform: scaleY(1); }
-    93%           { transform: scaleY(0.06); }
-}
+/* (eye blink animation removed — not visible from top-down view) */
