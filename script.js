@@ -34,7 +34,7 @@ const responsive=[ //save an dictionary for how many image to display on one sli
         {breakPoint:{width:1300,item:3}}
      ]        
 
-function load(){
+async function load(){
 
     
     for(let i=0; i<responsive.length; i++){
@@ -47,7 +47,7 @@ function load(){
     	}
 
     }
-    generateGallery();
+    await generateGallery();
     start(); //go to start function
 
 }
@@ -125,33 +125,41 @@ function autoPlay(){
 }
 
 
-function generateGallery(){
+async function generateGallery(){
 
-    // Array of image filenames
-	const imageFiles = ["girl3","purple1","flower1","dog1","horse1", "girl2","car2",
-    "Flower and girl", "Fruit", "Bird", "Chris Hemsworth",
-    "Deer", "Elden Ring", "Girl Portarit 2", "Girl Portrait" ,"Man In Car","Red Car",
-    "red lady", "simple women"];
+    const gallery = document.querySelector('.gallery-slider');
 
+    const apiUrl = 'https://api.github.com/repos/TrueFengTingGuo/FengTingGuoPersonalPortfolio/contents/Images/paintings';
 
-	// Get a reference to the gallery container
-	const gallery = document.querySelector('.gallery-slider');
+    let imageFiles = [];
 
-     	// String template for each item
-	const itemTemplate = 
-    '<div class="item"> ' +
-        '<img src="Images/{directory}.jpg" alt="painting">' +
-        ' <div class="overlay">'+
-               '<h1>Refence found from internet</h1>' + 
-         '</div>'+
-    ' </div>';
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('API request failed: ' + response.status);
+        const files = await response.json();
 
-	// Loop through the array of image filenames and create an <img> tag for each one
+        // Filter to only image files by extension
+        const imageExtensions = /\.(jpg|jpeg|png|gif)$/i;
+        imageFiles = files
+            .filter(file => file.type === 'file' && imageExtensions.test(file.name))
+            .map(file => file.name);
+    } catch (err) {
+        console.error('Could not load paintings from GitHub API:', err);
+    }
+
+    // String template for each item
+    const itemTemplate =
+        '<div class="item">' +
+            '<img src="Images/paintings/{filename}" alt="painting">' +
+            '<div class="overlay">' +
+                '<h1>Reference found from internet</h1>' +
+            '</div>' +
+        '</div>';
+
     let html = '';
-	for (let i = 0; i < imageFiles.length; i++) {   
-         const itemHtml = itemTemplate.replace('{directory}', imageFiles[i]);
-		html += itemHtml;
-	}
+    for (let i = 0; i < imageFiles.length; i++) {
+        html += itemTemplate.replace('{filename}', imageFiles[i]);
+    }
     gallery.innerHTML += html;
 }
 
@@ -159,7 +167,7 @@ function generateGallery(){
 
 let timer=setInterval(autoPlay,2000);
 
-window.onload = load();
+window.onload = load;
 
  // header fixed
 
