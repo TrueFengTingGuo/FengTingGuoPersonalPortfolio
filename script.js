@@ -185,26 +185,122 @@ window.onscroll = function () {
     }
 }
 
-// ---- Cat Pet ----
+// ---- Pixel Art Cat Pet - State Machine ----
+//
+// States: idle → run → jump → fall → idle/run
+//
+//  idle : wanders slowly to random targets; transitions to RUN when mouse moves,
+//         or to JUMP on a random timer
+//  run  : chases mouse cursor; transitions to IDLE when mouse is still,
+//         or to JUMP on a random timer
+//  jump : ascending phase of a parabolic arc toward a target; gravity applied each
+//         frame; transitions to FALL when vy flips positive (peak reached)
+//  fall : descending phase; transitions back to IDLE or RUN on landing
+//
+// Clicking anywhere launches the cat to that point via a curved arc.
+
 window.addEventListener('DOMContentLoaded', function () {
-    const pet = document.getElementById('pet');
-    const inner = pet.querySelector('.pet-inner');
+    const pet    = document.getElementById('pet');
+    const canvas = document.getElementById('cat-canvas');
+    const ctx    = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
 
-    const CAT_W = 56;
-    const CAT_H = 77;
+    const SPRITE_W = 32, SPRITE_H = 32, SCALE = 2;
+    const CAT_W = SPRITE_W * SCALE, CAT_H = SPRITE_H * SCALE;
 
-    let catX = window.innerWidth / 2 - CAT_W / 2;
+    // Downward acceleration applied during jump / fall  (px / s²)
+    const GRAVITY = 900;
+
+    // Sprite sheet definitions
+    const SPRITES = {
+        idle: { file: 'Images/Animations/Cat/1_Cat_Idle-Sheet.png', frames: 8,  fps: 8  },
+        run:  { file: 'Images/Animations/Cat/2_Cat_Run-Sheet.png',  frames: 10, fps: 12 },
+        jump: { file: 'Images/Animations/Cat/3_Cat_Jump-Sheet.png', frames: 4,  fps: 10 },
+        fall: { file: 'Images/Animations/Cat/4_Cat_Fall-Sheet.png', frames: 4,  fps: 10 },
+    };
+    Object.keys(SPRITES).forEach(key => {
+        const img = new Image();
+        img.src = SPRITES[key].file;
+        SPRITES[key].img = img;
+    });
+
+    // Cat position and velocity
+    let catX = window.innerWidth  / 2 - CAT_W / 2;
     let catY = window.innerHeight / 2 - CAT_H / 2;
     let vx = 0, vy = 0;
+    let facingLeft = false;
 
+    // Mouse tracking
     let mouseX = catX + CAT_W / 2;
     let mouseY = catY + CAT_H / 2;
     let lastMoveTime = 0;
 
-    let wanderAngle = Math.random() * Math.PI * 2;
+    // Wander sub-state (used while idle)
+    let wanderTargetX = catX, wanderTargetY = catY;
     let wanderTimer = 0;
-    let currentAngle = 0; // smoothed heading angle in degrees (0 = facing up)
-    let lastTime = null;
+
+    // Jump sub-state
+    let jumpTargetX = 0, jumpTargetY = 0;
+    let jumpTimer = 0, jumpDuration = 0;
+
+    // Timer until the next autonomous jump
+    let nextJumpTimer = 3 + Math.random() * 3;
+
+    // Logic state  ('idle' | 'run' | 'jump' | 'fall') – drives movement rules
+    let state = 'idle';
+
+    // Animation state  – derived from logic state + actual speed; drives sprite selection
+    // idle/run logic states map to 'idle' sprite when nearly still, 'run' sprite when moving
+    let animState = 'idle';
+
+    // Animation frame tracking
+    let frameIndex = 0, frameTimer = 0;
+
+    // ------------------------------------------------------------------
+    // enterState  –  the single place that drives all state transitions
+    // ------------------------------------------------------------------
+    function enterState(newState, data) {
+        state      = newState;
+        frameIndex = 0;
+        frameTimer = 0;
+
+        if (newState === 'jump' && data) {
+            // data: { tx, ty }  –  world-space centre of the jump target
+            jumpTargetX = data.tx;
+            jumpTargetY = data.ty;
+            jumpTimer   = 0;
+
+            const cx = catX + CAT_W / 2;
+            const cy = catY + CAT_H / 2;
+            const dx = jumpTargetX - cx;
+            const dy = jumpTargetY - cy;
+            const dist = Math.hypot(dx, dy);
+
+            // Choose a flight time that scales with distance
+            //   – short hops: ~0.55 s,  long arcs: ~1.6 s
+            const T = Math.max(0.55, Math.min(1.6, dist / 320));
+            jumpDuration = T;
+
+            // Constant horizontal velocity to reach target in exactly T seconds
+            vx = dx / T;
+
+            // Vertical: solve cy + vy0·T + ½·g·T² = jumpTargetY
+            //   vy0 = (dy − ½·g·T²) / T
+            // This naturally produces an upward kick; clamp to guarantee visible arc.
+            vy = (dy - 0.5 * GRAVITY * T * T) / T;
+            if (vy > -120) vy = -120;          // always go upward first
+        }
+    }
+
+    // Pick a new random wander destination
+    function pickWanderTarget() {
+        const maxX = window.innerWidth  - CAT_W;
+        const maxY = window.innerHeight - CAT_H;
+        wanderTargetX = 50 + Math.random() * Math.max(0, maxX - 100);
+        wanderTargetY = 50 + Math.random() * Math.max(0, maxY - 100);
+        wanderTimer = 2 + Math.random() * 3;
+    }
+    pickWanderTarget();
 
     window.addEventListener('mousemove', function (e) {
         mouseX = e.clientX;
@@ -212,68 +308,209 @@ window.addEventListener('DOMContentLoaded', function () {
         lastMoveTime = Date.now();
     });
 
+    // Click anywhere → launch cat to that point via a curved jump
+    window.addEventListener('click', function (e) {
+        if (state !== 'jump' && state !== 'fall') {
+            enterState('jump', { tx: e.clientX, ty: e.clientY });
+        }
+    });
+
+    // ------------------------------------------------------------------
+    // Rendering helpers
+    // ------------------------------------------------------------------
+    function renderFrame() {
+        const spr = SPRITES[animState];
+        if (!spr || !spr.img.complete || !spr.img.naturalWidth) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const sx = frameIndex * SPRITE_W;
+        if (facingLeft) {
+            ctx.save();
+            ctx.translate(CAT_W, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(spr.img, sx, 0, SPRITE_W, SPRITE_H, 0, 0, CAT_W, CAT_H);
+            ctx.restore();
+        } else {
+            ctx.drawImage(spr.img, sx, 0, SPRITE_W, SPRITE_H, 0, 0, CAT_W, CAT_H);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Main loop
+    // ------------------------------------------------------------------
+    let lastTime = null;
+
     function loop(timestamp) {
         if (!lastTime) lastTime = timestamp;
         const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
         lastTime = timestamp;
 
-        const now = Date.now();
+        const now      = Date.now();
+        const maxX     = window.innerWidth  - CAT_W;
+        const maxY     = window.innerHeight - CAT_H;
         const isChasing = lastMoveTime > 0 && (now - lastMoveTime) < 1500;
-        const maxX = window.innerWidth - CAT_W;
-        const maxY = window.innerHeight - CAT_H;
 
-        if (isChasing) {
-            const dx = mouseX - (catX + CAT_W / 2);
-            const dy = mouseY - (catY + CAT_H / 2);
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 8) {
-                const speed = 260;
-                vx += (dx / dist * speed - vx) * 9 * dt;
-                vy += (dy / dist * speed - vy) * 9 * dt;
-            } else {
-                vx *= 0.75;
-                vy *= 0.75;
+        // ------------------------------------------------------------------
+        // State machine  –  update velocity / detect transitions each frame
+        // ------------------------------------------------------------------
+        switch (state) {
+
+            // ── IDLE ──────────────────────────────────────────────────────
+            case 'idle': {
+                wanderTimer   -= dt;
+                nextJumpTimer -= dt;
+
+                const tdx   = wanderTargetX - catX;
+                const tdy   = wanderTargetY - catY;
+                const tdist = Math.hypot(tdx, tdy);
+                if (tdist < 20 || wanderTimer <= 0) pickWanderTarget();
+
+                const wSpd = 55;
+                vx += ((tdx / Math.max(tdist, 1)) * wSpd - vx) * 2.5 * dt;
+                vy += ((tdy / Math.max(tdist, 1)) * wSpd - vy) * 2.5 * dt;
+
+                if (isChasing) { enterState('run'); break; }
+
+                if (nextJumpTimer <= 0) {
+                    nextJumpTimer = 4 + Math.random() * 4;
+                    enterState('jump', {
+                        tx: wanderTargetX + CAT_W / 2,
+                        ty: wanderTargetY + CAT_H / 2
+                    });
+                    break;
+                }
+                break;
             }
-        } else {
-            wanderTimer -= dt;
-            if (wanderTimer <= 0) {
-                wanderAngle = Math.random() * Math.PI * 2;
-                wanderTimer = 1.8 + Math.random() * 2.2;
+
+            // ── RUN ───────────────────────────────────────────────────────
+            case 'run': {
+                nextJumpTimer -= dt;
+
+                const tdx   = mouseX - (catX + CAT_W / 2);
+                const tdy   = mouseY - (catY + CAT_H / 2);
+                const tdist = Math.hypot(tdx, tdy);
+                const spd   = 260;
+
+                if (tdist > 8) {
+                    vx += (tdx / tdist * spd - vx) * 9 * dt;
+                    vy += (tdy / tdist * spd - vy) * 9 * dt;
+                } else {
+                    vx *= 0.75;
+                    vy *= 0.75;
+                }
+
+                if (!isChasing) { enterState('idle'); break; }
+
+                if (nextJumpTimer <= 0) {
+                    nextJumpTimer = 2.5 + Math.random() * 3;
+                    enterState('jump', { tx: mouseX, ty: mouseY });
+                    break;
+                }
+                break;
             }
-            const wSpeed = 55;
-            vx += (Math.cos(wanderAngle) * wSpeed - vx) * 2.5 * dt;
-            vy += (Math.sin(wanderAngle) * wSpeed - vy) * 2.5 * dt;
+
+            // ── JUMP (ascending arc) ──────────────────────────────────────
+            case 'jump': {
+                vy         += GRAVITY * dt;   // gravity pulls downward
+                jumpTimer  += dt;
+
+                // Peak reached → switch to fall sprite
+                if (vy >= 0) {
+                    enterState('fall');
+                    break;
+                }
+
+                // Safety: if we somehow overshoot the expected duration, land
+                if (jumpTimer > jumpDuration + 0.5) {
+                    vy = 0; vx = 0;
+                    catX = Math.max(0, Math.min(maxX, jumpTargetX - CAT_W / 2));
+                    catY = Math.max(0, Math.min(maxY, jumpTargetY - CAT_H / 2));
+                    nextJumpTimer = 2.5 + Math.random() * 3;
+                    enterState(isChasing ? 'run' : 'idle');
+                }
+                break;
+            }
+
+            // ── FALL (descending arc) ─────────────────────────────────────
+            case 'fall': {
+                vy        += GRAVITY * dt;
+                jumpTimer += dt;
+
+                const cx           = catX + CAT_W / 2;
+                const cy           = catY + CAT_H / 2;
+                const distToTarget = Math.hypot(cx - jumpTargetX, cy - jumpTargetY);
+
+                // Land when close to target or when time budget expires
+                if (distToTarget < 50 || jumpTimer > jumpDuration + 0.6) {
+                    vy = 0; vx = 0;
+                    catX = Math.max(0, Math.min(maxX, jumpTargetX - CAT_W / 2));
+                    catY = Math.max(0, Math.min(maxY, jumpTargetY - CAT_H / 2));
+                    nextJumpTimer = 2.5 + Math.random() * 3;
+                    enterState(isChasing ? 'run' : 'idle');
+                }
+                break;
+            }
         }
 
+        // ------------------------------------------------------------------
+        // Position integration
+        // ------------------------------------------------------------------
         catX += vx * dt;
         catY += vy * dt;
 
-        if (catX < 0) { catX = 0; vx = Math.abs(vx); wanderAngle = Math.atan2(vy, Math.abs(vx)); }
-        if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); wanderAngle = Math.atan2(vy, -Math.abs(vx)); }
-        if (catY < 0) { catY = 0; vy = Math.abs(vy); wanderAngle = Math.atan2(Math.abs(vy), vx); }
-        if (catY > maxY) { catY = maxY; vy = -Math.abs(vy); wanderAngle = Math.atan2(-Math.abs(vy), vx); }
-
-        // Rotate cat to face direction of movement (top-down perspective)
-        const spd2 = Math.sqrt(vx * vx + vy * vy);
-        if (spd2 > 20) {
-            const targetAngle = Math.atan2(vy, vx) * 180 / Math.PI + 90;
-            let diff = ((targetAngle - currentAngle + 540) % 360) - 180;
-            currentAngle += diff * Math.min(dt * 12, 1);
+        if (state === 'idle' || state === 'run') {
+            // Simple bounce off viewport edges
+            if (catX < 0)    { catX = 0;    vx =  Math.abs(vx); }
+            if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); }
+            if (catY < 0)    { catY = 0;    vy =  Math.abs(vy); }
+            if (catY > maxY) { catY = maxY; vy = -Math.abs(vy); }
+        } else {
+            // During ballistic arc: horizontal bounce, force-land if out of bounds
+            if (catX < 0)    { catX = 0;    vx =  Math.abs(vx); }
+            if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); }
+            if (catY < 0)    { catY = 0;    vy =  Math.abs(vy); }
+            if (catY > maxY) {
+                catY = maxY;
+                vy = 0; vx = 0;
+                nextJumpTimer = 2 + Math.random() * 3;
+                enterState(isChasing ? 'run' : 'idle');
+            }
         }
 
-        pet.style.left = catX + 'px';
-        pet.style.top = catY + 'px';
-        pet.style.transform = 'rotate(' + currentAngle + 'deg)';
+        // ------------------------------------------------------------------
+        // Facing direction, animation advance, render
+        // ------------------------------------------------------------------
+        if (Math.abs(vx) > 10) facingLeft = vx < 0;
 
-        const spd = Math.sqrt(vx * vx + vy * vy);
-        if (spd > 12) inner.classList.add('walking');
-        else inner.classList.remove('walking');
+        // Derive animation state from logic state + actual speed
+        // jump/fall always use their own sprites; idle/run ground states use
+        // 'run' sprite when moving (speed > 20 px/s) and 'idle' when still.
+        const speed = Math.hypot(vx, vy);
+        const newAnimState = (state === 'jump' || state === 'fall')
+            ? state
+            : (speed > 20 ? 'run' : 'idle');
+        if (newAnimState !== animState) {
+            animState  = newAnimState;
+            frameIndex = 0;
+            frameTimer = 0;
+        }
+
+        const spr = SPRITES[animState];
+        frameTimer += dt;
+        const frameDur = 1 / spr.fps;
+        while (frameTimer >= frameDur) {
+            frameTimer -= frameDur;
+            frameIndex  = (frameIndex + 1) % spr.frames;
+        }
+
+        renderFrame();
+        pet.style.left = catX + 'px';
+        pet.style.top  = catY + 'px';
 
         requestAnimationFrame(loop);
     }
 
     pet.style.left = catX + 'px';
-    pet.style.top = catY + 'px';
+    pet.style.top  = catY + 'px';
     requestAnimationFrame(loop);
 });
 

@@ -755,45 +755,14 @@ footer .section-title p {
     top: 0;
     z-index: 9999;
     pointer-events: none;
-    width: 56px;
-    height: 77px;
+    width: 64px;
+    height: 64px;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.40));
-    will-change: left, top, transform;
+    will-change: left, top;
 }
 
-.pet-inner {
-    width: 100%;
-    height: 100%;
+#cat-canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    display: block;
 }
-
-.pet-inner.walking {
-    animation: cat-walk 0.22s ease-in-out infinite alternate;
-}
-
-@keyframes cat-walk {
-    from {
-        transform: rotate(-4deg) scaleX(0.97);
-    }
-
-    to {
-        transform: rotate(4deg) scaleX(1.03);
-    }
-}
-
-.cat-tail {
-    animation: tail-wag 1.1s ease-in-out infinite alternate;
-    transform-origin: 40px 97px;
-    transform-box: view-box;
-}
-
-@keyframes tail-wag {
-    from {
-        transform: rotate(-22deg);
-    }
-
-    to {
-        transform: rotate(22deg);
-    }
-}
-
-/* (eye blink animation removed — not visible from top-down view) */
