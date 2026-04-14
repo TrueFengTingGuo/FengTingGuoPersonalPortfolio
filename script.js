@@ -114,6 +114,8 @@ function changeSlide(currentSlide) {
 //autp play the slide
 function autoPlay() {
 
+    if (!slideDots || slideDots === 0) return; // gallery not ready yet
+
     if (autoSlide == slideDots - 1) {
         autoSlide = 0;
     }
