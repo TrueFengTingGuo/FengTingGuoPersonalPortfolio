@@ -202,9 +202,9 @@ window.onscroll = function () {
 // Clicking anywhere launches the cat to that point via a curved arc.
 
 window.addEventListener('DOMContentLoaded', function () {
-    const pet    = document.getElementById('pet');
+    const pet = document.getElementById('pet');
     const canvas = document.getElementById('cat-canvas');
-    const ctx    = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
     const SPRITE_W = 32, SPRITE_H = 32, SCALE = 2;
@@ -213,12 +213,15 @@ window.addEventListener('DOMContentLoaded', function () {
     // Downward acceleration applied during jump / fall  (px / s²)
     const GRAVITY = 900;
 
+    // Minimum distance (px) between cat centre and jump target to allow a jump
+    const MIN_JUMP_DIST = 80;
+
     // Sprite sheet definitions
     const SPRITES = {
-        idle: { file: 'Images/Animations/Cat/1_Cat_Idle-Sheet.png', frames: 8,  fps: 8  },
-        run:  { file: 'Images/Animations/Cat/2_Cat_Run-Sheet.png',  frames: 10, fps: 12 },
-        jump: { file: 'Images/Animations/Cat/3_Cat_Jump-Sheet.png', frames: 4,  fps: 10 },
-        fall: { file: 'Images/Animations/Cat/4_Cat_Fall-Sheet.png', frames: 4,  fps: 10 },
+        idle: { file: 'Images/Animations/Cat/1_Cat_Idle-Sheet.png', frames: 8, fps: 8 },
+        run: { file: 'Images/Animations/Cat/2_Cat_Run-Sheet.png', frames: 10, fps: 12 },
+        jump: { file: 'Images/Animations/Cat/3_Cat_Jump-Sheet.png', frames: 4, fps: 10 },
+        fall: { file: 'Images/Animations/Cat/4_Cat_Fall-Sheet.png', frames: 4, fps: 10 },
     };
     Object.keys(SPRITES).forEach(key => {
         const img = new Image();
@@ -227,7 +230,7 @@ window.addEventListener('DOMContentLoaded', function () {
     });
 
     // Cat position and velocity
-    let catX = window.innerWidth  / 2 - CAT_W / 2;
+    let catX = window.innerWidth / 2 - CAT_W / 2;
     let catY = window.innerHeight / 2 - CAT_H / 2;
     let vx = 0, vy = 0;
     let facingLeft = false;
@@ -262,7 +265,7 @@ window.addEventListener('DOMContentLoaded', function () {
     // enterState  –  the single place that drives all state transitions
     // ------------------------------------------------------------------
     function enterState(newState, data) {
-        state      = newState;
+        state = newState;
         frameIndex = 0;
         frameTimer = 0;
 
@@ -270,7 +273,7 @@ window.addEventListener('DOMContentLoaded', function () {
             // data: { tx, ty }  –  world-space centre of the jump target
             jumpTargetX = data.tx;
             jumpTargetY = data.ty;
-            jumpTimer   = 0;
+            jumpTimer = 0;
 
             const cx = catX + CAT_W / 2;
             const cy = catY + CAT_H / 2;
@@ -296,7 +299,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
     // Pick a new random wander destination
     function pickWanderTarget() {
-        const maxX = window.innerWidth  - CAT_W;
+        const maxX = window.innerWidth - CAT_W;
         const maxY = window.innerHeight - CAT_H;
         wanderTargetX = 50 + Math.random() * Math.max(0, maxX - 100);
         wanderTargetY = 50 + Math.random() * Math.max(0, maxY - 100);
@@ -313,7 +316,10 @@ window.addEventListener('DOMContentLoaded', function () {
     // Click anywhere → launch cat to that point via a curved jump
     window.addEventListener('click', function (e) {
         if (state !== 'jump' && state !== 'fall') {
-            enterState('jump', { tx: e.clientX, ty: e.clientY });
+            const cdist = Math.hypot(e.clientX - (catX + CAT_W / 2), e.clientY - (catY + CAT_H / 2));
+            if (cdist >= MIN_JUMP_DIST) {
+                enterState('jump', { tx: e.clientX, ty: e.clientY });
+            }
         }
     });
 
@@ -346,9 +352,9 @@ window.addEventListener('DOMContentLoaded', function () {
         const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
         lastTime = timestamp;
 
-        const now      = Date.now();
-        const maxX     = window.innerWidth  - CAT_W;
-        const maxY     = window.innerHeight - CAT_H;
+        const now = Date.now();
+        const maxX = window.innerWidth - CAT_W;
+        const maxY = window.innerHeight - CAT_H;
         const isChasing = lastMoveTime > 0 && (now - lastMoveTime) < 1500;
 
         // ------------------------------------------------------------------
@@ -358,11 +364,11 @@ window.addEventListener('DOMContentLoaded', function () {
 
             // ── IDLE ──────────────────────────────────────────────────────
             case 'idle': {
-                wanderTimer   -= dt;
+                wanderTimer -= dt;
                 nextJumpTimer -= dt;
 
-                const tdx   = wanderTargetX - catX;
-                const tdy   = wanderTargetY - catY;
+                const tdx = wanderTargetX - catX;
+                const tdy = wanderTargetY - catY;
                 const tdist = Math.hypot(tdx, tdy);
                 if (tdist < 20 || wanderTimer <= 0) pickWanderTarget();
 
@@ -374,11 +380,13 @@ window.addEventListener('DOMContentLoaded', function () {
 
                 if (nextJumpTimer <= 0) {
                     nextJumpTimer = 4 + Math.random() * 4;
-                    enterState('jump', {
-                        tx: wanderTargetX + CAT_W / 2,
-                        ty: wanderTargetY + CAT_H / 2
-                    });
-                    break;
+                    const jtx = wanderTargetX + CAT_W / 2;
+                    const jty = wanderTargetY + CAT_H / 2;
+                    const jdist = Math.hypot(jtx - (catX + CAT_W / 2), jty - (catY + CAT_H / 2));
+                    if (jdist >= MIN_JUMP_DIST) {
+                        enterState('jump', { tx: jtx, ty: jty });
+                        break;
+                    }
                 }
                 break;
             }
@@ -387,10 +395,10 @@ window.addEventListener('DOMContentLoaded', function () {
             case 'run': {
                 nextJumpTimer -= dt;
 
-                const tdx   = mouseX - (catX + CAT_W / 2);
-                const tdy   = mouseY - (catY + CAT_H / 2);
+                const tdx = mouseX - (catX + CAT_W / 2);
+                const tdy = mouseY - (catY + CAT_H / 2);
                 const tdist = Math.hypot(tdx, tdy);
-                const spd   = 260;
+                const spd = 260;
 
                 if (tdist > 8) {
                     vx += (tdx / tdist * spd - vx) * 9 * dt;
@@ -404,16 +412,19 @@ window.addEventListener('DOMContentLoaded', function () {
 
                 if (nextJumpTimer <= 0) {
                     nextJumpTimer = 2.5 + Math.random() * 3;
-                    enterState('jump', { tx: mouseX, ty: mouseY });
-                    break;
+                    const mdist = Math.hypot(mouseX - (catX + CAT_W / 2), mouseY - (catY + CAT_H / 2));
+                    if (mdist >= MIN_JUMP_DIST) {
+                        enterState('jump', { tx: mouseX, ty: mouseY });
+                        break;
+                    }
                 }
                 break;
             }
 
             // ── JUMP (ascending arc) ──────────────────────────────────────
             case 'jump': {
-                vy         += GRAVITY * dt;   // gravity pulls downward
-                jumpTimer  += dt;
+                vy += GRAVITY * dt;   // gravity pulls downward
+                jumpTimer += dt;
 
                 // Peak reached → switch to fall sprite
                 if (vy >= 0) {
@@ -434,11 +445,11 @@ window.addEventListener('DOMContentLoaded', function () {
 
             // ── FALL (descending arc) ─────────────────────────────────────
             case 'fall': {
-                vy        += GRAVITY * dt;
+                vy += GRAVITY * dt;
                 jumpTimer += dt;
 
-                const cx           = catX + CAT_W / 2;
-                const cy           = catY + CAT_H / 2;
+                const cx = catX + CAT_W / 2;
+                const cy = catY + CAT_H / 2;
                 const distToTarget = Math.hypot(cx - jumpTargetX, cy - jumpTargetY);
 
                 // Land when close to target or when time budget expires
@@ -461,15 +472,15 @@ window.addEventListener('DOMContentLoaded', function () {
 
         if (state === 'idle' || state === 'run') {
             // Simple bounce off viewport edges
-            if (catX < 0)    { catX = 0;    vx =  Math.abs(vx); }
+            if (catX < 0) { catX = 0; vx = Math.abs(vx); }
             if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); }
-            if (catY < 0)    { catY = 0;    vy =  Math.abs(vy); }
+            if (catY < 0) { catY = 0; vy = Math.abs(vy); }
             if (catY > maxY) { catY = maxY; vy = -Math.abs(vy); }
         } else {
             // During ballistic arc: horizontal bounce, force-land if out of bounds
-            if (catX < 0)    { catX = 0;    vx =  Math.abs(vx); }
+            if (catX < 0) { catX = 0; vx = Math.abs(vx); }
             if (catX > maxX) { catX = maxX; vx = -Math.abs(vx); }
-            if (catY < 0)    { catY = 0;    vy =  Math.abs(vy); }
+            if (catY < 0) { catY = 0; vy = Math.abs(vy); }
             if (catY > maxY) {
                 catY = maxY;
                 vy = 0; vx = 0;
@@ -491,7 +502,7 @@ window.addEventListener('DOMContentLoaded', function () {
             ? state
             : (speed > 20 ? 'run' : 'idle');
         if (newAnimState !== animState) {
-            animState  = newAnimState;
+            animState = newAnimState;
             frameIndex = 0;
             frameTimer = 0;
         }
@@ -501,18 +512,18 @@ window.addEventListener('DOMContentLoaded', function () {
         const frameDur = 1 / spr.fps;
         while (frameTimer >= frameDur) {
             frameTimer -= frameDur;
-            frameIndex  = (frameIndex + 1) % spr.frames;
+            frameIndex = (frameIndex + 1) % spr.frames;
         }
 
         renderFrame();
         pet.style.left = catX + 'px';
-        pet.style.top  = catY + 'px';
+        pet.style.top = catY + 'px';
 
         requestAnimationFrame(loop);
     }
 
     pet.style.left = catX + 'px';
-    pet.style.top  = catY + 'px';
+    pet.style.top = catY + 'px';
     requestAnimationFrame(loop);
 });
 
