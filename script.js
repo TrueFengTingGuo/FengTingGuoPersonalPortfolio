@@ -528,5 +528,210 @@ window.addEventListener('DOMContentLoaded', function () {
 });
 
 
+/* ============================================================
+   Fluid + Ripple Background
+   - 2D wave height-field simulation
+   - Mouse MOVE  → smooth fluid-flow disturbance (directional dipole)
+   - Mouse CLICK → expanding circular ripple
+   - Color palette: deep navy base, cyan peaks, purple troughs
+   ============================================================ */
+(function () {
+    const canvas = document.getElementById('fluid-bg');
+    const ctx = canvas.getContext('2d');
 
+    // Off-screen canvas used to blit the low-res simulation → full screen
+    const buf = document.createElement('canvas');
+    const bctx = buf.getContext('2d');
 
+    // Simulation grid resolution relative to canvas pixels
+    const SCALE = 3;           // 1 sim cell = SCALE css pixels
+    const DAMPING = 0.984;     // energy loss per step
+
+    // Fluid (mouse-move) parameters
+    const FLUID_RADIUS   = 7;   // sim-cell radius of each fluid push
+    const FLUID_STRENGTH = 200; // peak disturbance strength for fluid
+
+    // Ripple (mouse-click) parameters
+    const RIPPLE_RADIUS   = 14;  // sim-cell radius of click ripple
+    const RIPPLE_STRENGTH = 110; // disturbance strength for click ripple
+
+    let cols, rows;
+    let curr, prev;             // Float32Array height buffers
+    let imgData;
+
+    // --- Colour palette (navy → cyan peaks / purple troughs) ---
+    // Natural spring water palette
+    const BASE_R = 6, BASE_G = 38, BASE_B = 34;      // deep still water
+    const PEAK_R = 155, PEAK_G = 255, PEAK_B = 210;   // sparkling surface highlight
+    const TROUGH_R = 0, TROUGH_G = 90, TROUGH_B = 72; // shadowed depth
+
+    function init() {
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        // Size the visible canvas to the full viewport
+        canvas.width = W;
+        canvas.height = H;
+
+        // Simulation grid is at lower resolution for performance
+        cols = Math.ceil(W / SCALE);
+        rows = Math.ceil(H / SCALE);
+
+        // Size the off-screen buffer to the simulation grid
+        buf.width = cols;
+        buf.height = rows;
+
+        curr = new Float32Array(cols * rows);
+        prev = new Float32Array(cols * rows);
+        imgData = bctx.createImageData(cols, rows);
+
+        // Pre-fill alpha channel (fully opaque)
+        for (let i = 3; i < imgData.data.length; i += 4) {
+            imgData.data[i] = 255;
+        }
+    }
+
+    // Add a circular disturbance at grid cell (gx, gy)
+    function disturb(gx, gy, radius, strength) {
+        const r2 = radius * radius;
+        const x0 = Math.max(0, gx - radius) | 0;
+        const x1 = Math.min(cols - 1, gx + radius) | 0;
+        const y0 = Math.max(0, gy - radius) | 0;
+        const y1 = Math.min(rows - 1, gy + radius) | 0;
+        for (let y = y0; y <= y1; y++) {
+            for (let x = x0; x <= x1; x++) {
+                const dx = x - gx, dy = y - gy;
+                if (dx * dx + dy * dy <= r2) {
+                    curr[y * cols + x] += strength;
+                }
+            }
+        }
+    }
+
+    // Advance wave one timestep
+    function step() {
+        const next = prev; // reuse old buffer to avoid allocation
+        for (let y = 1; y < rows - 1; y++) {
+            for (let x = 1; x < cols - 1; x++) {
+                const i = y * cols + x;
+                next[i] = (
+                    curr[i - 1] +
+                    curr[i + 1] +
+                    curr[i - cols] +
+                    curr[i + cols]
+                ) * 0.5 - next[i];
+                next[i] *= DAMPING;
+            }
+        }
+        // Swap buffers
+        prev = curr;
+        curr = next;
+    }
+
+    // Render height field to ImageData then scale-blit to main canvas
+    function render() {
+        const d = imgData.data;
+        for (let i = 0, p = 0; i < cols * rows; i++, p += 4) {
+            const h = curr[i];
+            if (h > 0) {
+                const t = Math.min(h / 120, 1);
+                d[p]     = BASE_R + (PEAK_R - BASE_R) * t | 0;
+                d[p + 1] = BASE_G + (PEAK_G - BASE_G) * t | 0;
+                d[p + 2] = BASE_B + (PEAK_B - BASE_B) * t | 0;
+            } else {
+                const t = Math.min(-h / 120, 1);
+                d[p]     = BASE_R + (TROUGH_R - BASE_R) * t | 0;
+                d[p + 1] = BASE_G + (TROUGH_G - BASE_G) * t | 0;
+                d[p + 2] = BASE_B + (TROUGH_B - BASE_B) * t | 0;
+            }
+        }
+        // Write pixels to the off-screen buffer, then scale up to fill the display canvas
+        bctx.putImageData(imgData, 0, 0);
+        ctx.drawImage(buf, 0, 0, cols, rows, 0, 0, canvas.width, canvas.height);
+    }
+
+    function loop() {
+        step();
+        render();
+        requestAnimationFrame(loop);
+    }
+
+    // --- Input handling ---
+    let lastPx = -1, lastPy = -1;
+
+    // Mouse MOVE → fluid-flow effect (interpolated directional dipole trail)
+    function onPointerMove(px, py) {
+        if (lastPx < 0) {
+            lastPx = px;
+            lastPy = py;
+            return;
+        }
+
+        const vx   = px - lastPx;
+        const vy   = py - lastPy;
+        const dist = Math.hypot(vx, vy);
+
+        if (dist > 0.5) {
+            const nx = vx / dist;
+            const ny = vy / dist;
+            const offset = Math.max(1, (FLUID_RADIUS * 0.5) | 0);
+
+            // Space disturbance points ~(FLUID_RADIUS * SCALE) px apart so
+            // fast movement fills the gap with a continuous streak instead of
+            // isolated blobs that look like ripples.
+            const stepPx = FLUID_RADIUS * SCALE * 0.9;
+            const steps  = Math.max(1, Math.ceil(dist / stepPx));
+
+            // Total energy scales mildly with distance but is spread across
+            // all interpolated points so each individual disturbance stays small.
+            const totalStrength = Math.min(dist * 3.5, FLUID_STRENGTH);
+            const strength      = totalStrength / steps;
+
+            for (let s = 0; s < steps; s++) {
+                const t  = (s + 0.5) / steps;
+                const ix = ((lastPx + vx * t) / SCALE) | 0;
+                const iy = ((lastPy + vy * t) / SCALE) | 0;
+                // Positive push ahead of cursor, negative wake behind → fluid look
+                disturb(ix + (nx * offset | 0), iy + (ny * offset | 0), FLUID_RADIUS,  strength);
+                disturb(ix - (nx * offset | 0), iy - (ny * offset | 0), FLUID_RADIUS, -strength * 0.6);
+            }
+        }
+
+        lastPx = px;
+        lastPy = py;
+    }
+
+    // Mouse CLICK → circular ripple expanding outward
+    function onPointerClick(px, py) {
+        const gx = (px / SCALE) | 0;
+        const gy = (py / SCALE) | 0;
+        disturb(gx, gy, RIPPLE_RADIUS, RIPPLE_STRENGTH);
+    }
+
+    window.addEventListener('mousemove', function (e) {
+        onPointerMove(e.clientX, e.clientY);
+    }, { passive: true });
+
+    window.addEventListener('click', function (e) {
+        onPointerClick(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchmove', function (e) {
+        const t = e.touches[0];
+        onPointerMove(t.clientX, t.clientY);
+    }, { passive: true });
+
+    window.addEventListener('touchstart', function (e) {
+        const t = e.touches[0];
+        onPointerClick(t.clientX, t.clientY);
+    }, { passive: true });
+
+    // Re-initialise on resize
+    window.addEventListener('resize', function () {
+        init();
+    });
+
+    // Start
+    init();
+    loop();
+}());
