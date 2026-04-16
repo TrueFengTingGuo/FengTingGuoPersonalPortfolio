@@ -552,7 +552,6 @@ window.addEventListener('DOMContentLoaded', function () {
     // ---- Configuration -----------------------------------------
     const SIM_SCALE = 0.5;          // simulation runs at half resolution
     const JACOBI_ITERS = 24;        // pressure solver iterations
-    const VISCOSITY = 0.3;          // kinematic viscosity
     const VORTICITY_STRENGTH = 35;  // vorticity confinement strength
     const VELOCITY_DISSIPATION = 0.995;
     const DYE_DISSIPATION = 0.985;
@@ -1157,9 +1156,9 @@ void main() {
             }
         }
 
-        const elapsedDt = Math.max((latest.t - earliest.t) / 1000, 0.001);
-        let vx = (latest.x - earliest.x) / elapsedDt;
-        let vy = (latest.y - earliest.y) / elapsedDt;
+        const dt = Math.max((latest.t - earliest.t) / 1000, 0.001);
+        let vx = (latest.x - earliest.x) / dt;
+        let vy = (latest.y - earliest.y) / dt;
         let speed = Math.hypot(vx, vy);
 
         const MAX_POINTER_SPEED = 2000;
