@@ -529,13 +529,13 @@ window.addEventListener('DOMContentLoaded', function () {
 
 
 /* ============================================================
-    Water Background – WebGL Navier-Stokes Fluid Simulation
-   - 2D incompressible Navier-Stokes (velocity + pressure fields)
-   - Semi-Lagrangian advection (no instability at high velocities)
-   - Jacobi pressure solver → divergence-free velocity
-   - Vorticity confinement  → swirls & curls preserved
-   - Dye tracer coloured per gesture for visualisation
-   - Mouse MOVE  → continuous velocity + colour splat
+    Water Background – Vector-Field Navier-Stokes Fluid Simulation
+   - True 2D incompressible Navier-Stokes with velocity vector fields
+   - Semi-Lagrangian advection (unconditionally stable)
+   - Jacobi pressure solver → divergence-free projection
+   - Vorticity confinement  → persistent swirls & eddies
+   - Dye tracer for watercolour-style visualisation
+   - Mouse MOVE  → velocity + dye splat (produces swirls)
    - Mouse CLICK → radial dye burst
    - Ambient: random coloured drips with random impulse
    ============================================================ */
@@ -543,146 +543,208 @@ window.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
     const canvas = document.getElementById('fluid-bg');
-
-    // WebGL2 with RGBA UNSIGNED_BYTE (universally renderable – no extensions needed)
-    const gl = canvas.getContext('webgl2') ||
-        canvas.getContext('webgl') ||
-        canvas.getContext('experimental-webgl');
+    const gl = canvas.getContext('webgl2');
     if (!gl) return;
 
-    // ---- Shader sources ----------------------------------------
-    const VS_SRC = `
-attribute vec2 a_pos;
-varying   vec2 v_uv;
+    // Enable float texture rendering
+    gl.getExtension('EXT_color_buffer_float');
+
+    // ---- Configuration -----------------------------------------
+    const SIM_SCALE = 0.5;          // simulation runs at half resolution
+    const JACOBI_ITERS = 24;        // pressure solver iterations
+    const VORTICITY_STRENGTH = 35;  // vorticity confinement strength
+    const VELOCITY_DISSIPATION = 0.995;
+    const DYE_DISSIPATION = 0.985;
+    const SPLAT_RADIUS = 0.004;     // normalised splat radius
+
+    // ---- Shared vertex shader ----------------------------------
+    const VS = `#version 300 es
+layout(location = 0) in vec2 a_pos;
+out vec2 v_uv;
 void main() {
-    v_uv        = a_pos * 0.5 + 0.5;
+    v_uv = a_pos * 0.5 + 0.5;
     gl_Position = vec4(a_pos, 0.0, 1.0);
 }`;
 
-    // Simulation: 2-D wave equation on every texel
-    // Heights are stored as UNSIGNED_BYTE RGBA: R encodes float [-1,1] → [0,1]
-    // decode: h = r * 2.0 - 1.0    encode: r = h * 0.5 + 0.5
-    // Mouse disturbances use an anisotropic Gaussian *derivative* aligned with
-    // the velocity vector: water is pushed ahead (+) and a trough trails behind (-),
-    // just like dragging a hand through water.  Static drops (clicks, ambient) keep
-    // the original radial Gaussian shape.
-    const SIM_FS = `
+    // ---- Fragment shaders --------------------------------------
+
+    // Splat: add Gaussian impulse to a field (velocity or dye)
+    const SPLAT_FS = `#version 300 es
 precision highp float;
-uniform sampler2D u_curr;
-uniform sampler2D u_prev;
-uniform vec2      u_res;
-uniform vec2      u_drops[16];
-uniform vec2      u_dropVel[16];
-uniform float     u_dropStr[16];
-uniform int       u_dropCount;
-varying vec2 v_uv;
-float dec(vec2 uv) { return texture2D(u_curr, uv).r * 2.0 - 1.0; }
-float decP(vec2 uv){ return texture2D(u_prev, uv).r * 2.0 - 1.0; }
+uniform sampler2D u_field;
+uniform vec2  u_point;
+uniform vec3  u_value;
+uniform float u_radius;
+uniform float u_aspect;
+in  vec2 v_uv;
+out vec4 fragColor;
 void main() {
-    vec2  tx   = 1.0 / u_res;
-    float c    = dec(v_uv);
-    float p    = decP(v_uv);
-    // 8-tap isotropic Laplacian (Mehrstellen stencil) – rounder wavefronts,
-    // less diamond-shaped artefact from the 4-tap cardinal-only version.
-    // ∇²h ≈ (4*(N+S+E+W) + (NE+NW+SE+SW) − 20h) / 6
-    float N  = dec(v_uv + vec2( 0.0,  tx.y));
-    float S  = dec(v_uv + vec2( 0.0, -tx.y));
-    float E  = dec(v_uv + vec2( tx.x,  0.0));
-    float W  = dec(v_uv + vec2(-tx.x,  0.0));
-    float NE = dec(v_uv + vec2( tx.x,  tx.y));
-    float NW = dec(v_uv + vec2(-tx.x,  tx.y));
-    float SE = dec(v_uv + vec2( tx.x, -tx.y));
-    float SW = dec(v_uv + vec2(-tx.x, -tx.y));
-    float lap = (4.0*(N + S + E + W) + (NE + NW + SE + SW) - 20.0 * c) / 6.0;
-    float next = 0.989 * (2.0 * c - p) + 0.21 * lap;
-    for (int i = 0; i < 16; i++) {
-        if (i >= u_dropCount) break;
-        vec2  d    = v_uv - u_drops[i];
-        vec2  vel  = u_dropVel[i];
-        float vlen = length(vel);
-        if (vlen > 0.0005) {
-            vec2  vn   = vel / vlen;      // unit forward direction
-            vec2  back = -vn;             // unit trailing direction
-
-            // ── Bow wave: positive crest offset ahead of the cursor ──
-            float bowOff = 8.0 / u_res.x;
-            vec2  dBow   = d - vn * bowOff;
-            float bowSig = 10.0 / u_res.x;
-            float bowWave = exp(-dot(dBow, dBow) / (2.0 * bowSig * bowSig));
-
-            // ── Central trough: negative depression at the cursor ──
-            float trSig  = 7.0 / u_res.x;
-            float trough = exp(-dot(d, d) / (2.0 * trSig * trSig));
-
-            // ── Kelvin diverging wake arms at ±19.47° behind cursor ──
-            // Rotation constants: cos(19.47°) ≈ 0.9428  sin(19.47°) ≈ 0.3333
-            float ck = 0.9428, sk = 0.3333;
-            vec2 arm1dir = vec2(ck * back.x - sk * back.y,  sk * back.x + ck * back.y);
-            vec2 arm2dir = vec2(ck * back.x + sk * back.y, -sk * back.x + ck * back.y);
-
-            float slong = 22.0 / u_res.x;
-            float swide =  5.0 / u_res.y;
-
-            float p1 = dot(d, arm1dir);
-            float q1 = d.x * arm1dir.y - d.y * arm1dir.x;
-            float p2 = dot(d, arm2dir);
-            float q2 = d.x * arm2dir.y - d.y * arm2dir.x;
-
-            // step() masks lobes to the trailing half-space only
-            float arm1 = step(0.0, p1) * exp(-(p1*p1 / (2.0*slong*slong) + q1*q1 / (2.0*swide*swide)));
-            float arm2 = step(0.0, p2) * exp(-(p2*p2 / (2.0*slong*slong) + q2*q2 / (2.0*swide*swide)));
-
-            float kelvinWake = 0.65 * bowWave - 0.45 * trough + 0.50 * (arm1 + arm2);
-
-            // Static blob used below the speed threshold
-            float blobSig = 12.0 / u_res.x;
-            float blob    = exp(-dot(d, d) / (2.0 * blobSig * blobSig));
-
-            // Smooth crossfade from radial blob → Kelvin wake pattern
-            float dirMix = smoothstep(0.002, 0.012, vlen);
-            next += u_dropStr[i] * mix(blob, kelvinWake, dirMix);
-        } else {
-            // Static click / ambient drop: ~12 px sigma, resolution-independent
-            float sig = 12.0 / u_res.x;
-            next += u_dropStr[i] * exp(-dot(d, d) / (2.0 * sig * sig));
-        }
-    }
-    float enc = clamp(next, -1.0, 1.0) * 0.5 + 0.5;
-    gl_FragColor = vec4(enc, 0.0, 0.0, 1.0);
+    vec2 d = v_uv - u_point;
+    d.x *= u_aspect;
+    float g = exp(-dot(d, d) / u_radius);
+    vec3 prev = texture(u_field, v_uv).rgb;
+    fragColor = vec4(prev + u_value * g, 1.0);
 }`;
 
-    // Render: height → surface normal → watercolour-painted surface
-    const RENDER_FS = `
+    // Advection: semi-Lagrangian trace-back
+    const ADVECT_FS = `#version 300 es
 precision highp float;
-uniform sampler2D u_curr;
-uniform vec2      u_res;
-varying vec2 v_uv;
-float dec(vec2 uv) { return texture2D(u_curr, uv).r * 2.0 - 1.0; }
+uniform sampler2D u_velocity;
+uniform sampler2D u_source;
+uniform vec2  u_texelSize;
+uniform float u_dt;
+uniform float u_dissipation;
+in  vec2 v_uv;
+out vec4 fragColor;
 void main() {
-    vec2  tx    = 1.0 / u_res;
-    float h     = dec(v_uv);
-    float hR    = dec(v_uv + vec2(tx.x, 0.0));
-    float hU    = dec(v_uv + vec2(0.0,  tx.y));
-    // Shallow normal scale → soft, matte surface (watercolour has no gloss)
-    vec3  norm  = normalize(vec3(-(hR - h) * 42.0, -(hU - h) * 42.0, 1.0));
-    vec3  light = normalize(vec3(0.3, 0.55, 1.0));
-    float diff  = max(dot(norm, light), 0.0);
-    // Very broad, faint specular – watercolour paper has minimal sheen
-    vec3  hlf   = normalize(light + vec3(0.0, 0.0, 1.0));
-    float spec  = pow(max(dot(norm, hlf), 0.0), 18.0);
-    // Lake palette: softer blue-green tones with lighter highlights
+    vec2 vel = texture(u_velocity, v_uv).xy;
+    vec2 coord = v_uv - u_dt * vel * u_texelSize;
+    fragColor = u_dissipation * texture(u_source, coord);
+}`;
+
+    // Divergence of velocity field
+    const DIVERGENCE_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_velocity;
+uniform vec2  u_texelSize;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    float L = texture(u_velocity, v_uv - vec2(u_texelSize.x, 0.0)).x;
+    float R = texture(u_velocity, v_uv + vec2(u_texelSize.x, 0.0)).x;
+    float B = texture(u_velocity, v_uv - vec2(0.0, u_texelSize.y)).y;
+    float T = texture(u_velocity, v_uv + vec2(0.0, u_texelSize.y)).y;
+    float div = 0.5 * (R - L + T - B);
+    fragColor = vec4(div, 0.0, 0.0, 1.0);
+}`;
+
+    // Jacobi iteration for pressure Poisson equation
+    const PRESSURE_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_pressure;
+uniform sampler2D u_divergence;
+uniform vec2  u_texelSize;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    float L = texture(u_pressure, v_uv - vec2(u_texelSize.x, 0.0)).x;
+    float R = texture(u_pressure, v_uv + vec2(u_texelSize.x, 0.0)).x;
+    float B = texture(u_pressure, v_uv - vec2(0.0, u_texelSize.y)).x;
+    float T = texture(u_pressure, v_uv + vec2(0.0, u_texelSize.y)).x;
+    float div = texture(u_divergence, v_uv).x;
+    float p = (L + R + B + T - div) * 0.25;
+    fragColor = vec4(p, 0.0, 0.0, 1.0);
+}`;
+
+    // Gradient subtraction: subtract pressure gradient from velocity
+    const GRADIENT_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_pressure;
+uniform sampler2D u_velocity;
+uniform vec2  u_texelSize;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    float L = texture(u_pressure, v_uv - vec2(u_texelSize.x, 0.0)).x;
+    float R = texture(u_pressure, v_uv + vec2(u_texelSize.x, 0.0)).x;
+    float B = texture(u_pressure, v_uv - vec2(0.0, u_texelSize.y)).x;
+    float T = texture(u_pressure, v_uv + vec2(0.0, u_texelSize.y)).x;
+    vec2 vel = texture(u_velocity, v_uv).xy;
+    vel -= 0.5 * vec2(R - L, T - B);
+    fragColor = vec4(vel, 0.0, 1.0);
+}`;
+
+    // Curl (vorticity) computation
+    const CURL_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_velocity;
+uniform vec2  u_texelSize;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    float L = texture(u_velocity, v_uv - vec2(u_texelSize.x, 0.0)).y;
+    float R = texture(u_velocity, v_uv + vec2(u_texelSize.x, 0.0)).y;
+    float B = texture(u_velocity, v_uv - vec2(0.0, u_texelSize.y)).x;
+    float T = texture(u_velocity, v_uv + vec2(0.0, u_texelSize.y)).x;
+    float curl = R - L - T + B;
+    fragColor = vec4(0.5 * curl, 0.0, 0.0, 1.0);
+}`;
+
+    // Vorticity confinement force
+    const VORTICITY_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_velocity;
+uniform sampler2D u_curl;
+uniform vec2  u_texelSize;
+uniform float u_strength;
+uniform float u_dt;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    float cL = texture(u_curl, v_uv - vec2(u_texelSize.x, 0.0)).x;
+    float cR = texture(u_curl, v_uv + vec2(u_texelSize.x, 0.0)).x;
+    float cB = texture(u_curl, v_uv - vec2(0.0, u_texelSize.y)).x;
+    float cT = texture(u_curl, v_uv + vec2(0.0, u_texelSize.y)).x;
+    float cC = texture(u_curl, v_uv).x;
+    vec2 force = vec2(abs(cT) - abs(cB), abs(cR) - abs(cL));
+    float len = length(force) + 1e-5;
+    force = force / len * cC * u_strength;
+    vec2 vel = texture(u_velocity, v_uv).xy;
+    vel += force * u_dt;
+    fragColor = vec4(vel, 0.0, 1.0);
+}`;
+
+    // Clear shader (fill with a constant value)
+    const CLEAR_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_field;
+uniform float u_value;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    fragColor = u_value * texture(u_field, v_uv);
+}`;
+
+    // Render: dye field → watercolour-style lake surface
+    const RENDER_FS = `#version 300 es
+precision highp float;
+uniform sampler2D u_dye;
+uniform sampler2D u_velocity;
+uniform vec2  u_texelSize;
+in  vec2 v_uv;
+out vec4 fragColor;
+void main() {
+    vec3 dye = texture(u_dye, v_uv).rgb;
+    vec2 vel = texture(u_velocity, v_uv).xy;
+    float speed = length(vel);
+
+    // Lake palette
     vec3 deep  = vec3(0.420, 0.620, 0.640);
     vec3 mid   = vec3(0.620, 0.820, 0.840);
     vec3 crest = vec3(0.960, 1.000, 0.980);
-    vec3 specC = vec3(1.000, 1.000, 1.000);
-    float t    = clamp(h * 3.0 + 0.2, 0.0, 1.0);
-    vec3  col  = mix(deep, mid,  clamp(t * 1.5, 0.0, 1.0));
-    col        = mix(col,  crest, clamp((t - 0.4) * 2.0, 0.0, 1.0));
-    // Balanced ambient – enough darkness to show the colour, matte finish
-    col        = col * (0.82 + 0.18 * diff) + specC * spec * 0.08;
-    // Soft pigment-pooling darkening at wave troughs
-    col       *= 1.0 - clamp(-h * 0.35, 0.0, 0.10);
-    gl_FragColor = vec4(col, 1.0);
+
+    // Dye intensity drives colour mapping
+    float intensity = length(dye);
+    float t = clamp(intensity * 2.0 + speed * 8.0, 0.0, 1.0);
+    vec3 col = mix(deep, mid, clamp(t * 1.5, 0.0, 1.0));
+    col = mix(col, crest, clamp((t - 0.4) * 2.0, 0.0, 1.0));
+
+    // Surface normal from velocity divergence for subtle shading
+    float vL = texture(u_velocity, v_uv - vec2(u_texelSize.x, 0.0)).x;
+    float vR = texture(u_velocity, v_uv + vec2(u_texelSize.x, 0.0)).x;
+    float vB = texture(u_velocity, v_uv - vec2(0.0, u_texelSize.y)).y;
+    float vT = texture(u_velocity, v_uv + vec2(0.0, u_texelSize.y)).y;
+    vec3 norm = normalize(vec3(-(vR - vL) * 40.0, -(vT - vB) * 40.0, 1.0));
+    vec3 light = normalize(vec3(0.3, 0.55, 1.0));
+    float diff = max(dot(norm, light), 0.0);
+    vec3 hlf = normalize(light + vec3(0.0, 0.0, 1.0));
+    float spec = pow(max(dot(norm, hlf), 0.0), 18.0);
+    col = col * (0.82 + 0.18 * diff) + vec3(1.0) * spec * 0.08;
+
+    // Tint with the dye colour at active areas
+    col = mix(col, col + dye * 0.15, clamp(intensity * 3.0, 0.0, 0.3));
+
+    fragColor = vec4(col, 1.0);
 }`;
 
     // ---- GL helpers --------------------------------------------
@@ -696,278 +758,365 @@ void main() {
     }
     function buildProgram(fsSrc) {
         const prog = gl.createProgram();
-        gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS_SRC));
+        gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS));
         gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSrc));
         gl.linkProgram(prog);
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
             console.error('Program link error:', gl.getProgramInfoLog(prog));
         return prog;
     }
+    function getUniforms(prog) {
+        const uniforms = {};
+        const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < count; i++) {
+            const info = gl.getActiveUniform(prog, i);
+            uniforms[info.name] = gl.getUniformLocation(prog, info.name);
+        }
+        return uniforms;
+    }
 
-    const simProg = buildProgram(SIM_FS);
-    const renderProg = buildProgram(RENDER_FS);
+    // Build all shader programs and cache their uniforms
+    const splatProg      = buildProgram(SPLAT_FS);
+    const advectProg     = buildProgram(ADVECT_FS);
+    const divergenceProg = buildProgram(DIVERGENCE_FS);
+    const pressureProg   = buildProgram(PRESSURE_FS);
+    const gradientProg   = buildProgram(GRADIENT_FS);
+    const curlProg       = buildProgram(CURL_FS);
+    const vorticityProg  = buildProgram(VORTICITY_FS);
+    const clearProg      = buildProgram(CLEAR_FS);
+    const renderProg     = buildProgram(RENDER_FS);
 
-    // Cache uniform locations once (looking them up every frame is wasteful)
-    const simU = {
-        curr: gl.getUniformLocation(simProg, 'u_curr'),
-        prev: gl.getUniformLocation(simProg, 'u_prev'),
-        res: gl.getUniformLocation(simProg, 'u_res'),
-        drops: gl.getUniformLocation(simProg, 'u_drops'),
-        dropVel: gl.getUniformLocation(simProg, 'u_dropVel'),
-        dropStr: gl.getUniformLocation(simProg, 'u_dropStr'),
-        dropCount: gl.getUniformLocation(simProg, 'u_dropCount'),
-    };
-    const renderU = {
-        curr: gl.getUniformLocation(renderProg, 'u_curr'),
-        res: gl.getUniformLocation(renderProg, 'u_res'),
-    };
+    const splatU      = getUniforms(splatProg);
+    const advectU     = getUniforms(advectProg);
+    const divergenceU = getUniforms(divergenceProg);
+    const pressureU   = getUniforms(pressureProg);
+    const gradientU   = getUniforms(gradientProg);
+    const curlU       = getUniforms(curlProg);
+    const vorticityU  = getUniforms(vorticityProg);
+    const clearU      = getUniforms(clearProg);
+    const renderU     = getUniforms(renderProg);
 
-    // Full-screen quad (TRIANGLE_STRIP)
+    // Full-screen quad
     const quadBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
     gl.bufferData(gl.ARRAY_BUFFER,
         new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
 
-    function bindQuad(prog) {
-        const loc = gl.getAttribLocation(prog, 'a_pos');
-        gl.enableVertexAttribArray(loc);
-        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
-        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    // VAO for the quad (WebGL2)
+    const quadVAO = gl.createVertexArray();
+    gl.bindVertexArray(quadVAO);
+    gl.enableVertexAttribArray(0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
+
+    function drawQuad() {
+        gl.bindVertexArray(quadVAO);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
-    // ---- Textures & FBOs ---------------------------------------
-    let W, H;
-    let texPrev, texCurr, texNext;
-    let fboPrev, fboCurr, fboNext;
+    // ---- Textures & FBOs (double-buffered) ----------------------
+    let displayW, displayH, simW, simH;
 
-    function canRenderToTexture(spec) {
-        const tex = gl.createTexture();
-        const fbo = gl.createFramebuffer();
-
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            spec.internalFormat,
-            4,
-            4,
-            0,
-            spec.format,
-            spec.type,
-            null
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-        const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.deleteFramebuffer(fbo);
-        gl.deleteTexture(tex);
-        return ok;
-    }
-
-    function pickSimulationTextureSpec() {
-        const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
-
-        if (isWebGL2) {
-            const colorFloatExt = gl.getExtension('EXT_color_buffer_float');
-            if (colorFloatExt) {
-                const halfFloatSpec = {
-                    internalFormat: gl.RGBA16F,
-                    format: gl.RGBA,
-                    type: gl.HALF_FLOAT,
-                };
-                if (canRenderToTexture(halfFloatSpec)) return halfFloatSpec;
-            }
-        } else {
-            const halfFloatExt = gl.getExtension('OES_texture_half_float');
-            const colorHalfFloatExt = gl.getExtension('EXT_color_buffer_half_float');
-            if (halfFloatExt && colorHalfFloatExt) {
-                const halfFloatSpec = {
-                    internalFormat: gl.RGBA,
-                    format: gl.RGBA,
-                    type: halfFloatExt.HALF_FLOAT_OES,
-                };
-                if (canRenderToTexture(halfFloatSpec)) return halfFloatSpec;
-            }
-        }
-
+    function createDoubleFBO(w, h, internalFormat, format, type, filter) {
+        const texA = createTex(w, h, internalFormat, format, type, filter);
+        const texB = createTex(w, h, internalFormat, format, type, filter);
         return {
-            internalFormat: gl.RGBA,
-            format: gl.RGBA,
-            type: gl.UNSIGNED_BYTE,
+            width: w, height: h,
+            read:  { tex: texA.tex, fbo: texA.fbo },
+            write: { tex: texB.tex, fbo: texB.fbo },
+            swap: function () {
+                const tmp = this.read;
+                this.read = this.write;
+                this.write = tmp;
+            }
         };
     }
-
-    const simTexSpec = pickSimulationTextureSpec();
-
-    function makeTex(w, h) {
-        const t = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, t);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            simTexSpec.internalFormat,
-            w,
-            h,
-            0,
-            simTexSpec.format,
-            simTexSpec.type,
-            null
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    function createTex(w, h, internalFormat, format, type, filter) {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        return t;
-    }
-    function makeFBO(tex) {
         const fbo = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-            gl.TEXTURE_2D, tex, 0);
-        return fbo;
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return { tex, fbo };
     }
+    function createSingleFBO(w, h, internalFormat, format, type, filter) {
+        return createTex(w, h, internalFormat, format, type, filter);
+    }
+
+    let velocity, pressure, dye, divergenceFBO, curlFBO;
+
     function initBuffers() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-        [texPrev, texCurr, texNext].forEach(t => t && gl.deleteTexture(t));
-        [fboPrev, fboCurr, fboNext].forEach(f => f && gl.deleteFramebuffer(f));
-        texPrev = makeTex(W, H); fboPrev = makeFBO(texPrev);
-        texCurr = makeTex(W, H); fboCurr = makeFBO(texCurr);
-        texNext = makeTex(W, H); fboNext = makeFBO(texNext);
+        displayW = canvas.width  = window.innerWidth;
+        displayH = canvas.height = window.innerHeight;
+        simW = Math.round(displayW * SIM_SCALE);
+        simH = Math.round(displayH * SIM_SCALE);
 
-        // Clear all simulation buffers to flat-water state.
-        // Height 0 is encoded as R = 0.5; uninitialized textures contain garbage
-        // which causes the bright flicker seen on first load.
-        gl.clearColor(0.5, 0.0, 0.0, 1.0);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fboPrev);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fboCurr);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fboNext);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        // Half-float for simulation fields (velocity, pressure, etc.)
+        const hf = gl.RGBA16F;
+        const rgba = gl.RGBA;
+        const hfType = gl.HALF_FLOAT;
+        const lin = gl.LINEAR;
+        const near = gl.NEAREST;
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
+        velocity     = createDoubleFBO(simW, simH, hf, rgba, hfType, lin);
+        pressure     = createDoubleFBO(simW, simH, hf, rgba, hfType, near);
+        dye          = createDoubleFBO(displayW, displayH, hf, rgba, hfType, lin);
+        divergenceFBO = createSingleFBO(simW, simH, hf, rgba, hfType, near);
+        curlFBO       = createSingleFBO(simW, simH, hf, rgba, hfType, near);
 
-    // ---- Disturbance queue -------------------------------------
-    const MAX_DROPS = 16;
-    let pendingDrops = [];
-
-    // vx, vy are pixel-space velocity; converted to UV space internally.
-    // Passing no velocity (or zero) produces a radial Gaussian (clicks, ambient).
-    function addDrop(px, py, strength, vx, vy) {
-        pendingDrops.push({
-            x: px / W, y: 1.0 - py / H, s: strength,
-            vx: (vx || 0) / W, vy: -(vy || 0) / H   // UV-space velocity (Y flipped)
+        // Clear all buffers
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        [velocity.read, velocity.write, pressure.read, pressure.write,
+         dye.read, dye.write, divergenceFBO, curlFBO].forEach(b => {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, b.fbo);
+            gl.clear(gl.COLOR_BUFFER_BIT);
         });
-        if (pendingDrops.length > MAX_DROPS) pendingDrops.shift();
-    }
-
-    // ---- Simulation step ---------------------------------------
-    function simStep() {
-        gl.useProgram(simProg);
-        bindQuad(simProg);
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texCurr);
-        gl.uniform1i(simU.curr, 0);
-
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, texPrev);
-        gl.uniform1i(simU.prev, 1);
-
-        gl.uniform2f(simU.res, W, H);
-
-        const count = Math.min(pendingDrops.length, MAX_DROPS);
-        const posArr = new Float32Array(MAX_DROPS * 2);
-        const velArr = new Float32Array(MAX_DROPS * 2);
-        const strArr = new Float32Array(MAX_DROPS);
-        for (let i = 0; i < count; i++) {
-            posArr[i * 2] = pendingDrops[i].x;
-            posArr[i * 2 + 1] = pendingDrops[i].y;
-            velArr[i * 2] = pendingDrops[i].vx;
-            velArr[i * 2 + 1] = pendingDrops[i].vy;
-            strArr[i] = pendingDrops[i].s;
-        }
-        gl.uniform2fv(simU.drops, posArr);
-        gl.uniform2fv(simU.dropVel, velArr);
-        gl.uniform1fv(simU.dropStr, strArr);
-        gl.uniform1i(simU.dropCount, count);
-        pendingDrops = [];
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fboNext);
-        gl.viewport(0, 0, W, H);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        // Ping-pong rotation: prev ← curr ← next ← old prev
-        const tmpT = texPrev, tmpF = fboPrev;
-        texPrev = texCurr; fboPrev = fboCurr;
-        texCurr = texNext; fboCurr = fboNext;
-        texNext = tmpT; fboNext = tmpF;
     }
 
-    // ---- Render to screen --------------------------------------
-    function renderFrame() {
-        gl.useProgram(renderProg);
-        bindQuad(renderProg);
+    // ---- Simulation steps --------------------------------------
+    function splatVelocity(x, y, dx, dy) {
+        gl.useProgram(splatProg);
+        gl.uniform1i(splatU['u_field'], 0);
+        gl.uniform2f(splatU['u_point'], x, y);
+        gl.uniform3f(splatU['u_value'], dx, dy, 0.0);
+        gl.uniform1f(splatU['u_radius'], SPLAT_RADIUS);
+        gl.uniform1f(splatU['u_aspect'], simW / simH);
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, texCurr);
-        gl.uniform1i(renderU.curr, 0);
-        gl.uniform2f(renderU.res, W, H);
-        gl.viewport(0, 0, W, H);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+        velocity.swap();
+    }
+
+    function splatDye(x, y, r, g, b) {
+        gl.useProgram(splatProg);
+        gl.uniform1i(splatU['u_field'], 0);
+        gl.uniform2f(splatU['u_point'], x, y);
+        gl.uniform3f(splatU['u_value'], r, g, b);
+        gl.uniform1f(splatU['u_radius'], SPLAT_RADIUS * 1.5);
+        gl.uniform1f(splatU['u_aspect'], displayW / displayH);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, dye.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, dye.write.fbo);
+        gl.viewport(0, 0, displayW, displayH);
+        drawQuad();
+        dye.swap();
+    }
+
+    function advectField(source, target, dt, dissipation) {
+        gl.useProgram(advectProg);
+        gl.uniform1i(advectU['u_velocity'], 0);
+        gl.uniform1i(advectU['u_source'], 1);
+        gl.uniform2f(advectU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.uniform1f(advectU['u_dt'], dt);
+        gl.uniform1f(advectU['u_dissipation'], dissipation);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, source.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.write.fbo);
+        gl.viewport(0, 0, target.width, target.height);
+        drawQuad();
+        target.swap();
+    }
+
+    function computeDivergence() {
+        gl.useProgram(divergenceProg);
+        gl.uniform1i(divergenceU['u_velocity'], 0);
+        gl.uniform2f(divergenceU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, divergenceFBO.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+    }
+
+    function solvePressure() {
+        gl.useProgram(pressureProg);
+        gl.uniform1i(pressureU['u_divergence'], 1);
+        gl.uniform2f(pressureU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, divergenceFBO.tex);
+
+        // Clear pressure before iterating (important for accuracy)
+        gl.useProgram(clearProg);
+        gl.uniform1i(clearU['u_field'], 0);
+        gl.uniform1f(clearU['u_value'], 0.8);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, pressure.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, pressure.write.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+        pressure.swap();
+
+        gl.useProgram(pressureProg);
+        gl.uniform1i(pressureU['u_pressure'], 0);
+        gl.uniform1i(pressureU['u_divergence'], 1);
+        gl.uniform2f(pressureU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, divergenceFBO.tex);
+
+        for (let i = 0; i < JACOBI_ITERS; i++) {
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, pressure.read.tex);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, pressure.write.fbo);
+            gl.viewport(0, 0, simW, simH);
+            drawQuad();
+            pressure.swap();
+        }
+    }
+
+    function subtractGradient() {
+        gl.useProgram(gradientProg);
+        gl.uniform1i(gradientU['u_pressure'], 0);
+        gl.uniform1i(gradientU['u_velocity'], 1);
+        gl.uniform2f(gradientU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, pressure.read.tex);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+        velocity.swap();
+    }
+
+    function computeCurl() {
+        gl.useProgram(curlProg);
+        gl.uniform1i(curlU['u_velocity'], 0);
+        gl.uniform2f(curlU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, curlFBO.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+    }
+
+    function applyVorticity(dt) {
+        gl.useProgram(vorticityProg);
+        gl.uniform1i(vorticityU['u_velocity'], 0);
+        gl.uniform1i(vorticityU['u_curl'], 1);
+        gl.uniform2f(vorticityU['u_texelSize'], 1.0 / simW, 1.0 / simH);
+        gl.uniform1f(vorticityU['u_strength'], VORTICITY_STRENGTH);
+        gl.uniform1f(vorticityU['u_dt'], dt);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, curlFBO.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
+        gl.viewport(0, 0, simW, simH);
+        drawQuad();
+        velocity.swap();
+    }
+
+    function renderToScreen() {
+        gl.useProgram(renderProg);
+        gl.uniform1i(renderU['u_dye'], 0);
+        gl.uniform1i(renderU['u_velocity'], 1);
+        gl.uniform2f(renderU['u_texelSize'], 1.0 / displayW, 1.0 / displayH);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, dye.read.tex);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, velocity.read.tex);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, displayW, displayH);
+        drawQuad();
+    }
+
+    // ---- Splat queue -------------------------------------------
+    let pendingSplats = [];
+
+    function queueSplat(px, py, vx, vy, color) {
+        const x = px / displayW;
+        const y = 1.0 - py / displayH;
+        pendingSplats.push({ x, y, dx: vx, dy: -vy, color });
+    }
+
+    function processSplats() {
+        for (let i = 0; i < pendingSplats.length; i++) {
+            const s = pendingSplats[i];
+            splatVelocity(s.x, s.y, s.dx, s.dy);
+            splatDye(s.x, s.y, s.color[0], s.color[1], s.color[2]);
+        }
+        pendingSplats = [];
+    }
+
+    // ---- Water colour palette for splats -----------------------
+    const WATER_COLORS = [
+        [0.15, 0.35, 0.40],
+        [0.20, 0.45, 0.50],
+        [0.10, 0.30, 0.35],
+        [0.25, 0.50, 0.55],
+        [0.18, 0.40, 0.45],
+        [0.12, 0.32, 0.38],
+    ];
+    function randomWaterColor() {
+        return WATER_COLORS[Math.floor(Math.random() * WATER_COLORS.length)];
     }
 
     // ---- Main loop ---------------------------------------------
-    function loop() {
-        // Directional water push with path interpolation.
-        // At high speed the cursor can jump 80+ px/frame; without interpolation that
-        // produces isolated point ripples.  Stamp the drag kernel at ~8 px intervals
-        // along the segment so the concave trough reads as a smooth continuous scoop.
+    let lastTime = null;
+
+    function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const dt = Math.min((timestamp - lastTime) / 1000, 0.033);
+        lastTime = timestamp;
+
+        // Inject mouse splats
         if (mouseX >= 0) {
             const dist = Math.hypot(mouseX - lastDropX, mouseY - lastDropY);
-            if (dist > 4 || lastDropX < 0) {
+            if (dist > 3 || lastDropX < 0) {
                 if (lastDropX >= 0 && dist > 0) {
-                    const velocity = getRecentPointerVelocity();
-                    const speed = velocity.speed;
-                    const str = Math.min(0.09 + speed * 0.00032, 0.24);
-                    // Interpolate along segment – directional stamps only, no blobs.
-                    // Steps capped at MAX_DROPS so the uniform array never overflows.
-                    const STEP_PX = 10;
-                    const steps = Math.min(MAX_DROPS, Math.max(1, Math.round(dist / STEP_PX)));
-                    const perStep = str / steps;
+                    const vel = getRecentPointerVelocity();
+                    const speed = vel.speed;
+                    const force = Math.min(speed * 0.15, 300.0);
+                    const ndx = speed > 0 ? vel.vx / speed * force : 0;
+                    const ndy = speed > 0 ? vel.vy / speed * force : 0;
+                    const STEP_PX = 8;
+                    const steps = Math.max(1, Math.round(dist / STEP_PX));
                     for (let s = 1; s <= steps; s++) {
                         const t = s / steps;
                         const ix = lastDropX + (mouseX - lastDropX) * t;
                         const iy = lastDropY + (mouseY - lastDropY) * t;
-                        addDrop(ix, iy, perStep, velocity.vx, velocity.vy);
+                        queueSplat(ix, iy, ndx, ndy, splatColor);
                     }
                 } else {
-                    // First contact – seed ripple (static blob, no velocity)
-                    addDrop(mouseX, mouseY, 0.08);
+                    splatColor = randomWaterColor();
+                    queueSplat(mouseX, mouseY, 0, 0, splatColor);
                 }
                 lastDropX = mouseX;
                 lastDropY = mouseY;
             }
         }
-        simStep();
-        renderFrame();
+
+        processSplats();
+
+        // Navier-Stokes simulation pipeline
+        computeCurl();
+        applyVorticity(dt);
+        advectField(velocity, velocity, dt, VELOCITY_DISSIPATION);
+        advectField(dye, dye, dt, DYE_DISSIPATION);
+        computeDivergence();
+        solvePressure();
+        subtractGradient();
+
+        renderToScreen();
         requestAnimationFrame(loop);
     }
 
     // ---- Input -------------------------------------------------
-    // Mouse position is recorded every event but a drop is only injected
-    // once per animation frame (inside loop()), preventing burst trails.
     let mouseX = -1, mouseY = -1;
     let lastDropX = -1, lastDropY = -1;
+    let splatColor = randomWaterColor();
     const pointerHistory = [];
     const POINTER_HISTORY_MS = 120;
     const MAX_POINTER_POINTS = 8;
@@ -1026,7 +1175,19 @@ void main() {
     function onMove(px, py) {
         recordPointerPoint(px, py);
     }
-    function onBurst(px, py) { addDrop(px, py, 0.34); }
+
+    function onBurst(px, py) {
+        const color = randomWaterColor();
+        // Radial burst: inject velocity in multiple directions for a splash
+        const burstForce = 180;
+        const dirs = 8;
+        for (let i = 0; i < dirs; i++) {
+            const angle = (i / dirs) * Math.PI * 2;
+            const dx = Math.cos(angle) * burstForce;
+            const dy = Math.sin(angle) * burstForce;
+            queueSplat(px, py, dx, dy, color);
+        }
+    }
 
     window.addEventListener('pointermove',
         e => onMove(e.clientX, e.clientY), { passive: true });
@@ -1042,24 +1203,34 @@ void main() {
         e => onBurst(e.touches[0].clientX, e.touches[0].clientY),
         { passive: true });
     window.addEventListener('resize', () => {
-        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory(); initBuffers();
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
+        clearPointerHistory(); initBuffers();
     });
     window.addEventListener('pointerleave', () => {
-        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
+        clearPointerHistory();
+        splatColor = randomWaterColor();
     });
     window.addEventListener('pointercancel', () => {
-        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
+        clearPointerHistory();
     });
     window.addEventListener('touchend', () => {
-        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
+        clearPointerHistory();
+        splatColor = randomWaterColor();
     }, { passive: true });
 
-    // Ambient raindrops – smaller and subtler for a drizzle feel
+    // Ambient drips – gentle random impulses
     setInterval(() => {
-        addDrop(Math.random() * W, Math.random() * H,
-            0.07 + Math.random() * 0.045);
+        const ax = Math.random() * displayW;
+        const ay = Math.random() * displayH;
+        const angle = Math.random() * Math.PI * 2;
+        const force = 30 + Math.random() * 60;
+        const color = randomWaterColor();
+        queueSplat(ax, ay, Math.cos(angle) * force, Math.sin(angle) * force, color);
     }, 1800);
 
     initBuffers();
-    loop();
+    requestAnimationFrame(loop);
 }());
