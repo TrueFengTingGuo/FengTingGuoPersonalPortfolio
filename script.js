@@ -529,13 +529,15 @@ window.addEventListener('DOMContentLoaded', function () {
 
 
 /* ============================================================
-    Water Background – WebGL height-field wave simulation
-   - GPU 2D wave equation: h_new = damp*(2*h - h_prev) + c²*∇²h
-   - Mouse/touch MOVE  → directional push (anisotropic Gaussian derivative
-     aligned with velocity: water piles up ahead, trough trails behind)
-   - Mouse/touch CLICK → stronger radial burst
-   - Ambient: random drips every ~1.8 s
-    - Color palette: blue water with white reflections
+    Water Background – WebGL Navier-Stokes Fluid Simulation
+   - 2D incompressible Navier-Stokes (velocity + pressure fields)
+   - Semi-Lagrangian advection (no instability at high velocities)
+   - Jacobi pressure solver → divergence-free velocity
+   - Vorticity confinement  → swirls & curls preserved
+   - Dye tracer coloured per gesture for visualisation
+   - Mouse MOVE  → continuous velocity + colour splat
+   - Mouse CLICK → radial dye burst
+   - Ambient: random coloured drips with random impulse
    ============================================================ */
 (function () {
     'use strict';
@@ -569,9 +571,9 @@ precision highp float;
 uniform sampler2D u_curr;
 uniform sampler2D u_prev;
 uniform vec2      u_res;
-uniform vec2      u_drops[8];
-uniform vec2      u_dropVel[8];
-uniform float     u_dropStr[8];
+uniform vec2      u_drops[16];
+uniform vec2      u_dropVel[16];
+uniform float     u_dropStr[16];
 uniform int       u_dropCount;
 varying vec2 v_uv;
 float dec(vec2 uv) { return texture2D(u_curr, uv).r * 2.0 - 1.0; }
@@ -580,30 +582,65 @@ void main() {
     vec2  tx   = 1.0 / u_res;
     float c    = dec(v_uv);
     float p    = decP(v_uv);
-    float up   = dec(v_uv + vec2(0.0,  tx.y));
-    float dn   = dec(v_uv + vec2(0.0, -tx.y));
-    float lt   = dec(v_uv + vec2(-tx.x, 0.0));
-    float rt   = dec(v_uv + vec2( tx.x, 0.0));
-    float lap  = up + dn + lt + rt - 4.0 * c;
-    // Slightly stronger propagation while keeping a soft decay
+    // 8-tap isotropic Laplacian (Mehrstellen stencil) – rounder wavefronts,
+    // less diamond-shaped artefact from the 4-tap cardinal-only version.
+    // ∇²h ≈ (4*(N+S+E+W) + (NE+NW+SE+SW) − 20h) / 6
+    float N  = dec(v_uv + vec2( 0.0,  tx.y));
+    float S  = dec(v_uv + vec2( 0.0, -tx.y));
+    float E  = dec(v_uv + vec2( tx.x,  0.0));
+    float W  = dec(v_uv + vec2(-tx.x,  0.0));
+    float NE = dec(v_uv + vec2( tx.x,  tx.y));
+    float NW = dec(v_uv + vec2(-tx.x,  tx.y));
+    float SE = dec(v_uv + vec2( tx.x, -tx.y));
+    float SW = dec(v_uv + vec2(-tx.x, -tx.y));
+    float lap = (4.0*(N + S + E + W) + (NE + NW + SE + SW) - 20.0 * c) / 6.0;
     float next = 0.989 * (2.0 * c - p) + 0.21 * lap;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 16; i++) {
         if (i >= u_dropCount) break;
-        vec2  d   = v_uv - u_drops[i];
-        vec2  vel = u_dropVel[i];
+        vec2  d    = v_uv - u_drops[i];
+        vec2  vel  = u_dropVel[i];
         float vlen = length(vel);
         if (vlen > 0.0005) {
-            // Directional push: derivative of anisotropic Gaussian along motion.
-            // Elongated along the motion axis (spar) and narrow across it (sperp).
-            // Sigma is in pixel space (converted to UV) so splash size is resolution-independent.
-            vec2  vn     = vel / vlen;
-            float d_par  = dot(d, vn);
-            float d_perp = d.x * vn.y - d.y * vn.x;
-            float spar   = 28.0 / u_res.x;   // ~28 px regardless of screen width
-            float sperp  = 12.0 / u_res.y;   // ~12 px regardless of screen height
-            float gauss  = exp(-(d_par  * d_par  / (2.0 * spar  * spar ) +
-                                  d_perp * d_perp / (2.0 * sperp * sperp)));
-            next += u_dropStr[i] * (d_par / spar) * gauss;
+            vec2  vn   = vel / vlen;      // unit forward direction
+            vec2  back = -vn;             // unit trailing direction
+
+            // ── Bow wave: positive crest offset ahead of the cursor ──
+            float bowOff = 8.0 / u_res.x;
+            vec2  dBow   = d - vn * bowOff;
+            float bowSig = 10.0 / u_res.x;
+            float bowWave = exp(-dot(dBow, dBow) / (2.0 * bowSig * bowSig));
+
+            // ── Central trough: negative depression at the cursor ──
+            float trSig  = 7.0 / u_res.x;
+            float trough = exp(-dot(d, d) / (2.0 * trSig * trSig));
+
+            // ── Kelvin diverging wake arms at ±19.47° behind cursor ──
+            // Rotation constants: cos(19.47°) ≈ 0.9428  sin(19.47°) ≈ 0.3333
+            float ck = 0.9428, sk = 0.3333;
+            vec2 arm1dir = vec2(ck * back.x - sk * back.y,  sk * back.x + ck * back.y);
+            vec2 arm2dir = vec2(ck * back.x + sk * back.y, -sk * back.x + ck * back.y);
+
+            float slong = 22.0 / u_res.x;
+            float swide =  5.0 / u_res.y;
+
+            float p1 = dot(d, arm1dir);
+            float q1 = d.x * arm1dir.y - d.y * arm1dir.x;
+            float p2 = dot(d, arm2dir);
+            float q2 = d.x * arm2dir.y - d.y * arm2dir.x;
+
+            // step() masks lobes to the trailing half-space only
+            float arm1 = step(0.0, p1) * exp(-(p1*p1 / (2.0*slong*slong) + q1*q1 / (2.0*swide*swide)));
+            float arm2 = step(0.0, p2) * exp(-(p2*p2 / (2.0*slong*slong) + q2*q2 / (2.0*swide*swide)));
+
+            float kelvinWake = 0.65 * bowWave - 0.45 * trough + 0.50 * (arm1 + arm2);
+
+            // Static blob used below the speed threshold
+            float blobSig = 12.0 / u_res.x;
+            float blob    = exp(-dot(d, d) / (2.0 * blobSig * blobSig));
+
+            // Smooth crossfade from radial blob → Kelvin wake pattern
+            float dirMix = smoothstep(0.002, 0.012, vlen);
+            next += u_dropStr[i] * mix(blob, kelvinWake, dirMix);
         } else {
             // Static click / ambient drop: ~12 px sigma, resolution-independent
             float sig = 12.0 / u_res.x;
@@ -672,17 +709,17 @@ void main() {
 
     // Cache uniform locations once (looking them up every frame is wasteful)
     const simU = {
-        curr:      gl.getUniformLocation(simProg, 'u_curr'),
-        prev:      gl.getUniformLocation(simProg, 'u_prev'),
-        res:       gl.getUniformLocation(simProg, 'u_res'),
-        drops:     gl.getUniformLocation(simProg, 'u_drops'),
-        dropVel:   gl.getUniformLocation(simProg, 'u_dropVel'),
-        dropStr:   gl.getUniformLocation(simProg, 'u_dropStr'),
+        curr: gl.getUniformLocation(simProg, 'u_curr'),
+        prev: gl.getUniformLocation(simProg, 'u_prev'),
+        res: gl.getUniformLocation(simProg, 'u_res'),
+        drops: gl.getUniformLocation(simProg, 'u_drops'),
+        dropVel: gl.getUniformLocation(simProg, 'u_dropVel'),
+        dropStr: gl.getUniformLocation(simProg, 'u_dropStr'),
         dropCount: gl.getUniformLocation(simProg, 'u_dropCount'),
     };
     const renderU = {
         curr: gl.getUniformLocation(renderProg, 'u_curr'),
-        res:  gl.getUniformLocation(renderProg, 'u_res'),
+        res: gl.getUniformLocation(renderProg, 'u_res'),
     };
 
     // Full-screen quad (TRIANGLE_STRIP)
@@ -820,7 +857,7 @@ void main() {
     }
 
     // ---- Disturbance queue -------------------------------------
-    const MAX_DROPS = 8;
+    const MAX_DROPS = 16;
     let pendingDrops = [];
 
     // vx, vy are pixel-space velocity; converted to UV space internally.
@@ -891,20 +928,30 @@ void main() {
 
     // ---- Main loop ---------------------------------------------
     function loop() {
-        // Directional water push: pass mouse velocity to the shader so it can
-        // compute an anisotropic displaced Gaussian (water pushed ahead, trough behind).
+        // Directional water push with path interpolation.
+        // At high speed the cursor can jump 80+ px/frame; without interpolation that
+        // produces isolated point ripples.  Stamp the drag kernel at ~8 px intervals
+        // along the segment so the concave trough reads as a smooth continuous scoop.
         if (mouseX >= 0) {
             const dist = Math.hypot(mouseX - lastDropX, mouseY - lastDropY);
-            if (dist > 6 || lastDropX < 0) {
+            if (dist > 4 || lastDropX < 0) {
                 if (lastDropX >= 0 && dist > 0) {
-                    const vx = mouseX - lastDropX;
-                    const vy = mouseY - lastDropY;
-                    const speed = Math.hypot(vx, vy);
-                    // Strength scales with speed; velocity direction handled in shader
-                    const str = Math.min(0.16 + speed * 0.005, 0.55);
-                    addDrop(mouseX, mouseY, str, vx, vy);
+                    const velocity = getRecentPointerVelocity();
+                    const speed = velocity.speed;
+                    const str = Math.min(0.09 + speed * 0.00032, 0.24);
+                    // Interpolate along segment – directional stamps only, no blobs.
+                    // Steps capped at MAX_DROPS so the uniform array never overflows.
+                    const STEP_PX = 10;
+                    const steps = Math.min(MAX_DROPS, Math.max(1, Math.round(dist / STEP_PX)));
+                    const perStep = str / steps;
+                    for (let s = 1; s <= steps; s++) {
+                        const t = s / steps;
+                        const ix = lastDropX + (mouseX - lastDropX) * t;
+                        const iy = lastDropY + (mouseY - lastDropY) * t;
+                        addDrop(ix, iy, perStep, velocity.vx, velocity.vy);
+                    }
                 } else {
-                    // Very first contact – small but clearer seed ripple
+                    // First contact – seed ripple (static blob, no velocity)
                     addDrop(mouseX, mouseY, 0.08);
                 }
                 lastDropX = mouseX;
@@ -921,10 +968,63 @@ void main() {
     // once per animation frame (inside loop()), preventing burst trails.
     let mouseX = -1, mouseY = -1;
     let lastDropX = -1, lastDropY = -1;
+    const pointerHistory = [];
+    const POINTER_HISTORY_MS = 120;
+    const MAX_POINTER_POINTS = 8;
 
-    function onMove(px, py) {
+    function prunePointerHistory(now) {
+        while (pointerHistory.length > MAX_POINTER_POINTS) pointerHistory.shift();
+        while (pointerHistory.length > 1 && now - pointerHistory[0].t > POINTER_HISTORY_MS) {
+            pointerHistory.shift();
+        }
+    }
+
+    function recordPointerPoint(px, py) {
+        const now = performance.now();
         mouseX = px;
         mouseY = py;
+        pointerHistory.push({ x: px, y: py, t: now });
+        prunePointerHistory(now);
+    }
+
+    function clearPointerHistory() {
+        pointerHistory.length = 0;
+    }
+
+    function getRecentPointerVelocity() {
+        if (pointerHistory.length < 2) {
+            return { vx: 0, vy: 0, speed: 0 };
+        }
+
+        const latest = pointerHistory[pointerHistory.length - 1];
+        let earliest = pointerHistory[0];
+
+        for (let i = pointerHistory.length - 2; i >= 0; i--) {
+            const point = pointerHistory[i];
+            if ((latest.t - point.t) >= 16) {
+                earliest = point;
+                break;
+            }
+        }
+
+        const dt = Math.max((latest.t - earliest.t) / 1000, 0.001);
+        let vx = (latest.x - earliest.x) / dt;
+        let vy = (latest.y - earliest.y) / dt;
+        let speed = Math.hypot(vx, vy);
+
+        const MAX_POINTER_SPEED = 2000;
+        if (speed > MAX_POINTER_SPEED) {
+            const scale = MAX_POINTER_SPEED / speed;
+            vx *= scale;
+            vy *= scale;
+            speed = MAX_POINTER_SPEED;
+        }
+
+        return { vx, vy, speed };
+    }
+
+    function onMove(px, py) {
+        recordPointerPoint(px, py);
     }
     function onBurst(px, py) { addDrop(px, py, 0.34); }
 
@@ -942,8 +1042,17 @@ void main() {
         e => onBurst(e.touches[0].clientX, e.touches[0].clientY),
         { passive: true });
     window.addEventListener('resize', () => {
-        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; initBuffers();
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory(); initBuffers();
     });
+    window.addEventListener('pointerleave', () => {
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+    });
+    window.addEventListener('pointercancel', () => {
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+    });
+    window.addEventListener('touchend', () => {
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; clearPointerHistory();
+    }, { passive: true });
 
     // Ambient raindrops – smaller and subtler for a drizzle feel
     setInterval(() => {
