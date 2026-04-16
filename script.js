@@ -552,7 +552,6 @@ window.addEventListener('DOMContentLoaded', function () {
     // ---- Configuration -----------------------------------------
     const SIM_SCALE = 0.5;          // simulation runs at half resolution
     const JACOBI_ITERS = 24;        // pressure solver iterations
-    const VISCOSITY = 0.3;          // kinematic viscosity
     const VORTICITY_STRENGTH = 35;  // vorticity confinement strength
     const VELOCITY_DISSIPATION = 0.995;
     const DYE_DISSIPATION = 0.985;
@@ -560,7 +559,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
     // ---- Shared vertex shader ----------------------------------
     const VS = `#version 300 es
-in vec2 a_pos;
+layout(location = 0) in vec2 a_pos;
 out vec2 v_uv;
 void main() {
     v_uv = a_pos * 0.5 + 0.5;
@@ -807,12 +806,10 @@ void main() {
     // VAO for the quad (WebGL2)
     const quadVAO = gl.createVertexArray();
     gl.bindVertexArray(quadVAO);
-    const posLoc = 0; // We'll bind a_pos to location 0
-    gl.enableVertexAttribArray(posLoc);
+    gl.enableVertexAttribArray(0);
     gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.bindVertexArray(null);
-
 
     function drawQuad() {
         gl.bindVertexArray(quadVAO);
@@ -1083,12 +1080,8 @@ void main() {
                     const vel = getRecentPointerVelocity();
                     const speed = vel.speed;
                     const force = Math.min(speed * 0.15, 300.0);
-                    const ndx = vel.vx > 0 || vel.vy > 0 || vel.vx < 0 || vel.vy < 0
-                        ? vel.vx / Math.max(speed, 1) * force
-                        : 0;
-                    const ndy = vel.vx > 0 || vel.vy > 0 || vel.vx < 0 || vel.vy < 0
-                        ? vel.vy / Math.max(speed, 1) * force
-                        : 0;
+                    const ndx = speed > 0 ? vel.vx / speed * force : 0;
+                    const ndy = speed > 0 ? vel.vy / speed * force : 0;
                     const STEP_PX = 8;
                     const steps = Math.max(1, Math.round(dist / STEP_PX));
                     for (let s = 1; s <= steps; s++) {
@@ -1164,9 +1157,9 @@ void main() {
             }
         }
 
-        const elapsedDt = Math.max((latest.t - earliest.t) / 1000, 0.001);
-        let vx = (latest.x - earliest.x) / elapsedDt;
-        let vy = (latest.y - earliest.y) / elapsedDt;
+        const dt = Math.max((latest.t - earliest.t) / 1000, 0.001);
+        let vx = (latest.x - earliest.x) / dt;
+        let vy = (latest.y - earliest.y) / dt;
         let speed = Math.hypot(vx, vy);
 
         const MAX_POINTER_SPEED = 2000;
