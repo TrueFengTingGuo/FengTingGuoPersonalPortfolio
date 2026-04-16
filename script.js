@@ -761,6 +761,7 @@ void main() {
         const prog = gl.createProgram();
         gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS));
         gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSrc));
+        gl.bindAttribLocation(prog, 0, 'a_pos');
         gl.linkProgram(prog);
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
             console.error('Program link error:', gl.getProgramInfoLog(prog));
@@ -777,25 +778,25 @@ void main() {
     }
 
     // Build all shader programs and cache their uniforms
-    const splatProg      = buildProgram(SPLAT_FS);
-    const advectProg     = buildProgram(ADVECT_FS);
+    const splatProg = buildProgram(SPLAT_FS);
+    const advectProg = buildProgram(ADVECT_FS);
     const divergenceProg = buildProgram(DIVERGENCE_FS);
-    const pressureProg   = buildProgram(PRESSURE_FS);
-    const gradientProg   = buildProgram(GRADIENT_FS);
-    const curlProg       = buildProgram(CURL_FS);
-    const vorticityProg  = buildProgram(VORTICITY_FS);
-    const clearProg      = buildProgram(CLEAR_FS);
-    const renderProg     = buildProgram(RENDER_FS);
+    const pressureProg = buildProgram(PRESSURE_FS);
+    const gradientProg = buildProgram(GRADIENT_FS);
+    const curlProg = buildProgram(CURL_FS);
+    const vorticityProg = buildProgram(VORTICITY_FS);
+    const clearProg = buildProgram(CLEAR_FS);
+    const renderProg = buildProgram(RENDER_FS);
 
-    const splatU      = getUniforms(splatProg);
-    const advectU     = getUniforms(advectProg);
+    const splatU = getUniforms(splatProg);
+    const advectU = getUniforms(advectProg);
     const divergenceU = getUniforms(divergenceProg);
-    const pressureU   = getUniforms(pressureProg);
-    const gradientU   = getUniforms(gradientProg);
-    const curlU       = getUniforms(curlProg);
-    const vorticityU  = getUniforms(vorticityProg);
-    const clearU      = getUniforms(clearProg);
-    const renderU     = getUniforms(renderProg);
+    const pressureU = getUniforms(pressureProg);
+    const gradientU = getUniforms(gradientProg);
+    const curlU = getUniforms(curlProg);
+    const vorticityU = getUniforms(vorticityProg);
+    const clearU = getUniforms(clearProg);
+    const renderU = getUniforms(renderProg);
 
     // Full-screen quad
     const quadBuf = gl.createBuffer();
@@ -812,12 +813,6 @@ void main() {
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
     gl.bindVertexArray(null);
 
-    // Bind attribute location 0 for all programs
-    [splatProg, advectProg, divergenceProg, pressureProg, gradientProg,
-     curlProg, vorticityProg, clearProg, renderProg].forEach(prog => {
-        gl.bindAttribLocation(prog, 0, 'a_pos');
-        gl.linkProgram(prog);
-    });
 
     function drawQuad() {
         gl.bindVertexArray(quadVAO);
@@ -832,7 +827,7 @@ void main() {
         const texB = createTex(w, h, internalFormat, format, type, filter);
         return {
             width: w, height: h,
-            read:  { tex: texA.tex, fbo: texA.fbo },
+            read: { tex: texA.tex, fbo: texA.fbo },
             write: { tex: texB.tex, fbo: texB.fbo },
             swap: function () {
                 const tmp = this.read;
@@ -862,7 +857,7 @@ void main() {
     let velocity, pressure, dye, divergenceFBO, curlFBO;
 
     function initBuffers() {
-        displayW = canvas.width  = window.innerWidth;
+        displayW = canvas.width = window.innerWidth;
         displayH = canvas.height = window.innerHeight;
         simW = Math.round(displayW * SIM_SCALE);
         simH = Math.round(displayH * SIM_SCALE);
@@ -874,16 +869,16 @@ void main() {
         const lin = gl.LINEAR;
         const near = gl.NEAREST;
 
-        velocity     = createDoubleFBO(simW, simH, hf, rgba, hfType, lin);
-        pressure     = createDoubleFBO(simW, simH, hf, rgba, hfType, near);
-        dye          = createDoubleFBO(displayW, displayH, hf, rgba, hfType, lin);
+        velocity = createDoubleFBO(simW, simH, hf, rgba, hfType, lin);
+        pressure = createDoubleFBO(simW, simH, hf, rgba, hfType, near);
+        dye = createDoubleFBO(displayW, displayH, hf, rgba, hfType, lin);
         divergenceFBO = createSingleFBO(simW, simH, hf, rgba, hfType, near);
-        curlFBO       = createSingleFBO(simW, simH, hf, rgba, hfType, near);
+        curlFBO = createSingleFBO(simW, simH, hf, rgba, hfType, near);
 
         // Clear all buffers
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         [velocity.read, velocity.write, pressure.read, pressure.write,
-         dye.read, dye.write, divergenceFBO, curlFBO].forEach(b => {
+        dye.read, dye.write, divergenceFBO, curlFBO].forEach(b => {
             gl.bindFramebuffer(gl.FRAMEBUFFER, b.fbo);
             gl.clear(gl.COLOR_BUFFER_BIT);
         });
