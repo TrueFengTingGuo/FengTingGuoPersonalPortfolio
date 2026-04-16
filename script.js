@@ -529,209 +529,428 @@ window.addEventListener('DOMContentLoaded', function () {
 
 
 /* ============================================================
-   Fluid + Ripple Background
-   - 2D wave height-field simulation
-   - Mouse MOVE  → smooth fluid-flow disturbance (directional dipole)
-   - Mouse CLICK → expanding circular ripple
-   - Color palette: deep navy base, cyan peaks, purple troughs
+    Water Background – WebGL height-field wave simulation
+   - GPU 2D wave equation: h_new = damp*(2*h - h_prev) + c²*∇²h
+   - Mouse/touch MOVE  → directional push (anisotropic Gaussian derivative
+     aligned with velocity: water piles up ahead, trough trails behind)
+   - Mouse/touch CLICK → stronger radial burst
+   - Ambient: random drips every ~1.8 s
+    - Color palette: blue water with white reflections
    ============================================================ */
 (function () {
+    'use strict';
+
     const canvas = document.getElementById('fluid-bg');
-    const ctx = canvas.getContext('2d');
 
-    // Off-screen canvas used to blit the low-res simulation → full screen
-    const buf = document.createElement('canvas');
-    const bctx = buf.getContext('2d');
+    // WebGL2 with RGBA UNSIGNED_BYTE (universally renderable – no extensions needed)
+    const gl = canvas.getContext('webgl2') ||
+        canvas.getContext('webgl') ||
+        canvas.getContext('experimental-webgl');
+    if (!gl) return;
 
-    // Simulation grid resolution relative to canvas pixels
-    const SCALE = 3;           // 1 sim cell = SCALE css pixels
-    const DAMPING = 0.984;     // energy loss per step
+    // ---- Shader sources ----------------------------------------
+    const VS_SRC = `
+attribute vec2 a_pos;
+varying   vec2 v_uv;
+void main() {
+    v_uv        = a_pos * 0.5 + 0.5;
+    gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
 
-    // Fluid (mouse-move) parameters
-    const FLUID_RADIUS   = 7;   // sim-cell radius of each fluid push
-    const FLUID_STRENGTH = 200; // peak disturbance strength for fluid
-
-    // Ripple (mouse-click) parameters
-    const RIPPLE_RADIUS   = 14;  // sim-cell radius of click ripple
-    const RIPPLE_STRENGTH = 110; // disturbance strength for click ripple
-
-    let cols, rows;
-    let curr, prev;             // Float32Array height buffers
-    let imgData;
-
-    // --- Colour palette (navy → cyan peaks / purple troughs) ---
-    // Natural spring water palette
-    const BASE_R = 6, BASE_G = 38, BASE_B = 34;      // deep still water
-    const PEAK_R = 155, PEAK_G = 255, PEAK_B = 210;   // sparkling surface highlight
-    const TROUGH_R = 0, TROUGH_G = 90, TROUGH_B = 72; // shadowed depth
-
-    function init() {
-        const W = window.innerWidth;
-        const H = window.innerHeight;
-
-        // Size the visible canvas to the full viewport
-        canvas.width = W;
-        canvas.height = H;
-
-        // Simulation grid is at lower resolution for performance
-        cols = Math.ceil(W / SCALE);
-        rows = Math.ceil(H / SCALE);
-
-        // Size the off-screen buffer to the simulation grid
-        buf.width = cols;
-        buf.height = rows;
-
-        curr = new Float32Array(cols * rows);
-        prev = new Float32Array(cols * rows);
-        imgData = bctx.createImageData(cols, rows);
-
-        // Pre-fill alpha channel (fully opaque)
-        for (let i = 3; i < imgData.data.length; i += 4) {
-            imgData.data[i] = 255;
+    // Simulation: 2-D wave equation on every texel
+    // Heights are stored as UNSIGNED_BYTE RGBA: R encodes float [-1,1] → [0,1]
+    // decode: h = r * 2.0 - 1.0    encode: r = h * 0.5 + 0.5
+    // Mouse disturbances use an anisotropic Gaussian *derivative* aligned with
+    // the velocity vector: water is pushed ahead (+) and a trough trails behind (-),
+    // just like dragging a hand through water.  Static drops (clicks, ambient) keep
+    // the original radial Gaussian shape.
+    const SIM_FS = `
+precision highp float;
+uniform sampler2D u_curr;
+uniform sampler2D u_prev;
+uniform vec2      u_res;
+uniform vec2      u_drops[8];
+uniform vec2      u_dropVel[8];
+uniform float     u_dropStr[8];
+uniform int       u_dropCount;
+varying vec2 v_uv;
+float dec(vec2 uv) { return texture2D(u_curr, uv).r * 2.0 - 1.0; }
+float decP(vec2 uv){ return texture2D(u_prev, uv).r * 2.0 - 1.0; }
+void main() {
+    vec2  tx   = 1.0 / u_res;
+    float c    = dec(v_uv);
+    float p    = decP(v_uv);
+    float up   = dec(v_uv + vec2(0.0,  tx.y));
+    float dn   = dec(v_uv + vec2(0.0, -tx.y));
+    float lt   = dec(v_uv + vec2(-tx.x, 0.0));
+    float rt   = dec(v_uv + vec2( tx.x, 0.0));
+    float lap  = up + dn + lt + rt - 4.0 * c;
+    // Slightly stronger propagation while keeping a soft decay
+    float next = 0.989 * (2.0 * c - p) + 0.21 * lap;
+    for (int i = 0; i < 8; i++) {
+        if (i >= u_dropCount) break;
+        vec2  d   = v_uv - u_drops[i];
+        vec2  vel = u_dropVel[i];
+        float vlen = length(vel);
+        if (vlen > 0.0005) {
+            // Directional push: derivative of anisotropic Gaussian along motion.
+            // Elongated along the motion axis (spar) and narrow across it (sperp).
+            // Sigma is in pixel space (converted to UV) so splash size is resolution-independent.
+            vec2  vn     = vel / vlen;
+            float d_par  = dot(d, vn);
+            float d_perp = d.x * vn.y - d.y * vn.x;
+            float spar   = 28.0 / u_res.x;   // ~28 px regardless of screen width
+            float sperp  = 12.0 / u_res.y;   // ~12 px regardless of screen height
+            float gauss  = exp(-(d_par  * d_par  / (2.0 * spar  * spar ) +
+                                  d_perp * d_perp / (2.0 * sperp * sperp)));
+            next += u_dropStr[i] * (d_par / spar) * gauss;
+        } else {
+            // Static click / ambient drop: ~12 px sigma, resolution-independent
+            float sig = 12.0 / u_res.x;
+            next += u_dropStr[i] * exp(-dot(d, d) / (2.0 * sig * sig));
         }
     }
+    float enc = clamp(next, -1.0, 1.0) * 0.5 + 0.5;
+    gl_FragColor = vec4(enc, 0.0, 0.0, 1.0);
+}`;
 
-    // Add a circular disturbance at grid cell (gx, gy)
-    function disturb(gx, gy, radius, strength) {
-        const r2 = radius * radius;
-        const x0 = Math.max(0, gx - radius) | 0;
-        const x1 = Math.min(cols - 1, gx + radius) | 0;
-        const y0 = Math.max(0, gy - radius) | 0;
-        const y1 = Math.min(rows - 1, gy + radius) | 0;
-        for (let y = y0; y <= y1; y++) {
-            for (let x = x0; x <= x1; x++) {
-                const dx = x - gx, dy = y - gy;
-                if (dx * dx + dy * dy <= r2) {
-                    curr[y * cols + x] += strength;
-                }
+    // Render: height → surface normal → watercolour-painted surface
+    const RENDER_FS = `
+precision highp float;
+uniform sampler2D u_curr;
+uniform vec2      u_res;
+varying vec2 v_uv;
+float dec(vec2 uv) { return texture2D(u_curr, uv).r * 2.0 - 1.0; }
+void main() {
+    vec2  tx    = 1.0 / u_res;
+    float h     = dec(v_uv);
+    float hR    = dec(v_uv + vec2(tx.x, 0.0));
+    float hU    = dec(v_uv + vec2(0.0,  tx.y));
+    // Shallow normal scale → soft, matte surface (watercolour has no gloss)
+    vec3  norm  = normalize(vec3(-(hR - h) * 42.0, -(hU - h) * 42.0, 1.0));
+    vec3  light = normalize(vec3(0.3, 0.55, 1.0));
+    float diff  = max(dot(norm, light), 0.0);
+    // Very broad, faint specular – watercolour paper has minimal sheen
+    vec3  hlf   = normalize(light + vec3(0.0, 0.0, 1.0));
+    float spec  = pow(max(dot(norm, hlf), 0.0), 18.0);
+    // Lake palette: softer blue-green tones with lighter highlights
+    vec3 deep  = vec3(0.420, 0.620, 0.640);
+    vec3 mid   = vec3(0.620, 0.820, 0.840);
+    vec3 crest = vec3(0.960, 1.000, 0.980);
+    vec3 specC = vec3(1.000, 1.000, 1.000);
+    float t    = clamp(h * 3.0 + 0.2, 0.0, 1.0);
+    vec3  col  = mix(deep, mid,  clamp(t * 1.5, 0.0, 1.0));
+    col        = mix(col,  crest, clamp((t - 0.4) * 2.0, 0.0, 1.0));
+    // Balanced ambient – enough darkness to show the colour, matte finish
+    col        = col * (0.82 + 0.18 * diff) + specC * spec * 0.08;
+    // Soft pigment-pooling darkening at wave troughs
+    col       *= 1.0 - clamp(-h * 0.35, 0.0, 0.10);
+    gl_FragColor = vec4(col, 1.0);
+}`;
+
+    // ---- GL helpers --------------------------------------------
+    function compileShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+            console.error('Shader compile error:', gl.getShaderInfoLog(s));
+        return s;
+    }
+    function buildProgram(fsSrc) {
+        const prog = gl.createProgram();
+        gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS_SRC));
+        gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSrc));
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+            console.error('Program link error:', gl.getProgramInfoLog(prog));
+        return prog;
+    }
+
+    const simProg = buildProgram(SIM_FS);
+    const renderProg = buildProgram(RENDER_FS);
+
+    // Cache uniform locations once (looking them up every frame is wasteful)
+    const simU = {
+        curr:      gl.getUniformLocation(simProg, 'u_curr'),
+        prev:      gl.getUniformLocation(simProg, 'u_prev'),
+        res:       gl.getUniformLocation(simProg, 'u_res'),
+        drops:     gl.getUniformLocation(simProg, 'u_drops'),
+        dropVel:   gl.getUniformLocation(simProg, 'u_dropVel'),
+        dropStr:   gl.getUniformLocation(simProg, 'u_dropStr'),
+        dropCount: gl.getUniformLocation(simProg, 'u_dropCount'),
+    };
+    const renderU = {
+        curr: gl.getUniformLocation(renderProg, 'u_curr'),
+        res:  gl.getUniformLocation(renderProg, 'u_res'),
+    };
+
+    // Full-screen quad (TRIANGLE_STRIP)
+    const quadBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+    gl.bufferData(gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+    function bindQuad(prog) {
+        const loc = gl.getAttribLocation(prog, 'a_pos');
+        gl.enableVertexAttribArray(loc);
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    }
+
+    // ---- Textures & FBOs ---------------------------------------
+    let W, H;
+    let texPrev, texCurr, texNext;
+    let fboPrev, fboCurr, fboNext;
+
+    function canRenderToTexture(spec) {
+        const tex = gl.createTexture();
+        const fbo = gl.createFramebuffer();
+
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            spec.internalFormat,
+            4,
+            4,
+            0,
+            spec.format,
+            spec.type,
+            null
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.deleteFramebuffer(fbo);
+        gl.deleteTexture(tex);
+        return ok;
+    }
+
+    function pickSimulationTextureSpec() {
+        const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+
+        if (isWebGL2) {
+            const colorFloatExt = gl.getExtension('EXT_color_buffer_float');
+            if (colorFloatExt) {
+                const halfFloatSpec = {
+                    internalFormat: gl.RGBA16F,
+                    format: gl.RGBA,
+                    type: gl.HALF_FLOAT,
+                };
+                if (canRenderToTexture(halfFloatSpec)) return halfFloatSpec;
+            }
+        } else {
+            const halfFloatExt = gl.getExtension('OES_texture_half_float');
+            const colorHalfFloatExt = gl.getExtension('EXT_color_buffer_half_float');
+            if (halfFloatExt && colorHalfFloatExt) {
+                const halfFloatSpec = {
+                    internalFormat: gl.RGBA,
+                    format: gl.RGBA,
+                    type: halfFloatExt.HALF_FLOAT_OES,
+                };
+                if (canRenderToTexture(halfFloatSpec)) return halfFloatSpec;
             }
         }
+
+        return {
+            internalFormat: gl.RGBA,
+            format: gl.RGBA,
+            type: gl.UNSIGNED_BYTE,
+        };
     }
 
-    // Advance wave one timestep
-    function step() {
-        const next = prev; // reuse old buffer to avoid allocation
-        for (let y = 1; y < rows - 1; y++) {
-            for (let x = 1; x < cols - 1; x++) {
-                const i = y * cols + x;
-                next[i] = (
-                    curr[i - 1] +
-                    curr[i + 1] +
-                    curr[i - cols] +
-                    curr[i + cols]
-                ) * 0.5 - next[i];
-                next[i] *= DAMPING;
-            }
+    const simTexSpec = pickSimulationTextureSpec();
+
+    function makeTex(w, h) {
+        const t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            simTexSpec.internalFormat,
+            w,
+            h,
+            0,
+            simTexSpec.format,
+            simTexSpec.type,
+            null
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        return t;
+    }
+    function makeFBO(tex) {
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+            gl.TEXTURE_2D, tex, 0);
+        return fbo;
+    }
+    function initBuffers() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        [texPrev, texCurr, texNext].forEach(t => t && gl.deleteTexture(t));
+        [fboPrev, fboCurr, fboNext].forEach(f => f && gl.deleteFramebuffer(f));
+        texPrev = makeTex(W, H); fboPrev = makeFBO(texPrev);
+        texCurr = makeTex(W, H); fboCurr = makeFBO(texCurr);
+        texNext = makeTex(W, H); fboNext = makeFBO(texNext);
+
+        // Clear all simulation buffers to flat-water state.
+        // Height 0 is encoded as R = 0.5; uninitialized textures contain garbage
+        // which causes the bright flicker seen on first load.
+        gl.clearColor(0.5, 0.0, 0.0, 1.0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboPrev);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboCurr);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboNext);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    // ---- Disturbance queue -------------------------------------
+    const MAX_DROPS = 8;
+    let pendingDrops = [];
+
+    // vx, vy are pixel-space velocity; converted to UV space internally.
+    // Passing no velocity (or zero) produces a radial Gaussian (clicks, ambient).
+    function addDrop(px, py, strength, vx, vy) {
+        pendingDrops.push({
+            x: px / W, y: 1.0 - py / H, s: strength,
+            vx: (vx || 0) / W, vy: -(vy || 0) / H   // UV-space velocity (Y flipped)
+        });
+        if (pendingDrops.length > MAX_DROPS) pendingDrops.shift();
+    }
+
+    // ---- Simulation step ---------------------------------------
+    function simStep() {
+        gl.useProgram(simProg);
+        bindQuad(simProg);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texCurr);
+        gl.uniform1i(simU.curr, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, texPrev);
+        gl.uniform1i(simU.prev, 1);
+
+        gl.uniform2f(simU.res, W, H);
+
+        const count = Math.min(pendingDrops.length, MAX_DROPS);
+        const posArr = new Float32Array(MAX_DROPS * 2);
+        const velArr = new Float32Array(MAX_DROPS * 2);
+        const strArr = new Float32Array(MAX_DROPS);
+        for (let i = 0; i < count; i++) {
+            posArr[i * 2] = pendingDrops[i].x;
+            posArr[i * 2 + 1] = pendingDrops[i].y;
+            velArr[i * 2] = pendingDrops[i].vx;
+            velArr[i * 2 + 1] = pendingDrops[i].vy;
+            strArr[i] = pendingDrops[i].s;
         }
-        // Swap buffers
-        prev = curr;
-        curr = next;
+        gl.uniform2fv(simU.drops, posArr);
+        gl.uniform2fv(simU.dropVel, velArr);
+        gl.uniform1fv(simU.dropStr, strArr);
+        gl.uniform1i(simU.dropCount, count);
+        pendingDrops = [];
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fboNext);
+        gl.viewport(0, 0, W, H);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        // Ping-pong rotation: prev ← curr ← next ← old prev
+        const tmpT = texPrev, tmpF = fboPrev;
+        texPrev = texCurr; fboPrev = fboCurr;
+        texCurr = texNext; fboCurr = fboNext;
+        texNext = tmpT; fboNext = tmpF;
     }
 
-    // Render height field to ImageData then scale-blit to main canvas
-    function render() {
-        const d = imgData.data;
-        for (let i = 0, p = 0; i < cols * rows; i++, p += 4) {
-            const h = curr[i];
-            if (h > 0) {
-                const t = Math.min(h / 120, 1);
-                d[p]     = BASE_R + (PEAK_R - BASE_R) * t | 0;
-                d[p + 1] = BASE_G + (PEAK_G - BASE_G) * t | 0;
-                d[p + 2] = BASE_B + (PEAK_B - BASE_B) * t | 0;
-            } else {
-                const t = Math.min(-h / 120, 1);
-                d[p]     = BASE_R + (TROUGH_R - BASE_R) * t | 0;
-                d[p + 1] = BASE_G + (TROUGH_G - BASE_G) * t | 0;
-                d[p + 2] = BASE_B + (TROUGH_B - BASE_B) * t | 0;
-            }
-        }
-        // Write pixels to the off-screen buffer, then scale up to fill the display canvas
-        bctx.putImageData(imgData, 0, 0);
-        ctx.drawImage(buf, 0, 0, cols, rows, 0, 0, canvas.width, canvas.height);
+    // ---- Render to screen --------------------------------------
+    function renderFrame() {
+        gl.useProgram(renderProg);
+        bindQuad(renderProg);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texCurr);
+        gl.uniform1i(renderU.curr, 0);
+        gl.uniform2f(renderU.res, W, H);
+        gl.viewport(0, 0, W, H);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
+    // ---- Main loop ---------------------------------------------
     function loop() {
-        step();
-        render();
+        // Directional water push: pass mouse velocity to the shader so it can
+        // compute an anisotropic displaced Gaussian (water pushed ahead, trough behind).
+        if (mouseX >= 0) {
+            const dist = Math.hypot(mouseX - lastDropX, mouseY - lastDropY);
+            if (dist > 6 || lastDropX < 0) {
+                if (lastDropX >= 0 && dist > 0) {
+                    const vx = mouseX - lastDropX;
+                    const vy = mouseY - lastDropY;
+                    const speed = Math.hypot(vx, vy);
+                    // Strength scales with speed; velocity direction handled in shader
+                    const str = Math.min(0.16 + speed * 0.005, 0.55);
+                    addDrop(mouseX, mouseY, str, vx, vy);
+                } else {
+                    // Very first contact – small but clearer seed ripple
+                    addDrop(mouseX, mouseY, 0.08);
+                }
+                lastDropX = mouseX;
+                lastDropY = mouseY;
+            }
+        }
+        simStep();
+        renderFrame();
         requestAnimationFrame(loop);
     }
 
-    // --- Input handling ---
-    let lastPx = -1, lastPy = -1;
+    // ---- Input -------------------------------------------------
+    // Mouse position is recorded every event but a drop is only injected
+    // once per animation frame (inside loop()), preventing burst trails.
+    let mouseX = -1, mouseY = -1;
+    let lastDropX = -1, lastDropY = -1;
 
-    // Mouse MOVE → fluid-flow effect (interpolated directional dipole trail)
-    function onPointerMove(px, py) {
-        if (lastPx < 0) {
-            lastPx = px;
-            lastPy = py;
-            return;
-        }
-
-        const vx   = px - lastPx;
-        const vy   = py - lastPy;
-        const dist = Math.hypot(vx, vy);
-
-        if (dist > 0.5) {
-            const nx = vx / dist;
-            const ny = vy / dist;
-            const offset = Math.max(1, (FLUID_RADIUS * 0.5) | 0);
-
-            // Space disturbance points ~(FLUID_RADIUS * SCALE) px apart so
-            // fast movement fills the gap with a continuous streak instead of
-            // isolated blobs that look like ripples.
-            const stepPx = FLUID_RADIUS * SCALE * 0.9;
-            const steps  = Math.max(1, Math.ceil(dist / stepPx));
-
-            // Total energy scales mildly with distance but is spread across
-            // all interpolated points so each individual disturbance stays small.
-            const totalStrength = Math.min(dist * 3.5, FLUID_STRENGTH);
-            const strength      = totalStrength / steps;
-
-            for (let s = 0; s < steps; s++) {
-                const t  = (s + 0.5) / steps;
-                const ix = ((lastPx + vx * t) / SCALE) | 0;
-                const iy = ((lastPy + vy * t) / SCALE) | 0;
-                // Positive push ahead of cursor, negative wake behind → fluid look
-                disturb(ix + (nx * offset | 0), iy + (ny * offset | 0), FLUID_RADIUS,  strength);
-                disturb(ix - (nx * offset | 0), iy - (ny * offset | 0), FLUID_RADIUS, -strength * 0.6);
-            }
-        }
-
-        lastPx = px;
-        lastPy = py;
+    function onMove(px, py) {
+        mouseX = px;
+        mouseY = py;
     }
+    function onBurst(px, py) { addDrop(px, py, 0.34); }
 
-    // Mouse CLICK → circular ripple expanding outward
-    function onPointerClick(px, py) {
-        const gx = (px / SCALE) | 0;
-        const gy = (py / SCALE) | 0;
-        disturb(gx, gy, RIPPLE_RADIUS, RIPPLE_STRENGTH);
-    }
-
-    window.addEventListener('mousemove', function (e) {
-        onPointerMove(e.clientX, e.clientY);
-    }, { passive: true });
-
-    window.addEventListener('click', function (e) {
-        onPointerClick(e.clientX, e.clientY);
+    window.addEventListener('pointermove',
+        e => onMove(e.clientX, e.clientY), { passive: true });
+    window.addEventListener('mousemove',
+        e => { if (!window.PointerEvent) onMove(e.clientX, e.clientY); },
+        { passive: true });
+    window.addEventListener('click',
+        e => onBurst(e.clientX, e.clientY));
+    window.addEventListener('touchmove',
+        e => onMove(e.touches[0].clientX, e.touches[0].clientY),
+        { passive: true });
+    window.addEventListener('touchstart',
+        e => onBurst(e.touches[0].clientX, e.touches[0].clientY),
+        { passive: true });
+    window.addEventListener('resize', () => {
+        mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1; initBuffers();
     });
 
-    window.addEventListener('touchmove', function (e) {
-        const t = e.touches[0];
-        onPointerMove(t.clientX, t.clientY);
-    }, { passive: true });
+    // Ambient raindrops – smaller and subtler for a drizzle feel
+    setInterval(() => {
+        addDrop(Math.random() * W, Math.random() * H,
+            0.07 + Math.random() * 0.045);
+    }, 1800);
 
-    window.addEventListener('touchstart', function (e) {
-        const t = e.touches[0];
-        onPointerClick(t.clientX, t.clientY);
-    }, { passive: true });
-
-    // Re-initialise on resize
-    window.addEventListener('resize', function () {
-        init();
-    });
-
-    // Start
-    init();
+    initBuffers();
     loop();
 }());
