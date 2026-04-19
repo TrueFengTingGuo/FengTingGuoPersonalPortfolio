@@ -2,344 +2,393 @@
 <html lang="en">
 
 <head>
-    <title>Personal Portfolio</title>
+    <meta charset="UTF-8">
+    <title>Feng Ting Guo — Code &amp; Canvas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+    <!-- Custom cursor -->
+    <div class="custom-cursor" aria-hidden="true"></div>
+
+    <!-- Scroll progress bar -->
+    <div class="scroll-progress" aria-hidden="true">
+        <div class="scroll-progress-bar"></div>
+    </div>
+
     <!-- Fluid background canvas -->
     <canvas id="fluid-bg"></canvas>
 
-
-
-    <!-- Start Header-->
-    <header>
-        <div class="container">
-            <div class="row">
-                <div class="brand-name">
-                    <a href="" class="logo">My Portfolio</a>
-                </div>
-
-                <div class="navbar">
-                    <ul>
-                        <!-- The <ul> tag defines an unordered (bulleted) list. Use the <ul> tag together with the <li> tag to create unordered lists.-->
-                        <li><a href="#home" class="active">Home</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#project">Programming</a></li>
-                        <li><a href="#painting">Painting</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <!-- Navigation -->
+    <header class="site-header">
+        <nav class="container nav-row">
+            <a href="#home" class="logo">FTG</a>
+            <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#project">Projects</a></li>
+                <li><a href="#painting">Paintings</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
     </header>
-    <!-- End Header-->
 
-    <!-- Start Home-->
-    <section class="home" id="home">
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <!-- Parallax geometric shapes -->
+        <div class="hero-shapes" aria-hidden="true">
+            <div class="shape-layer" data-parallax="0.2">
+                <svg class="shape shape-circle" viewBox="0 0 100 100" width="80" height="80">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad-coral)" stroke-width="1.5"/>
+                </svg>
+                <svg class="shape shape-hexagon" viewBox="0 0 100 100" width="60" height="60">
+                    <polygon points="50,3 93,25 93,75 50,97 7,75 7,25" fill="none" stroke="url(#grad-violet)" stroke-width="1.5"/>
+                </svg>
+            </div>
+            <div class="shape-layer" data-parallax="0.4">
+                <svg class="shape shape-triangle" viewBox="0 0 100 100" width="70" height="70">
+                    <polygon points="50,10 90,90 10,90" fill="none" stroke="url(#grad-magenta)" stroke-width="1.5"/>
+                </svg>
+                <svg class="shape shape-circle" viewBox="0 0 100 100" width="50" height="50">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#grad-magenta)" stroke-width="1"/>
+                </svg>
+            </div>
+            <div class="shape-layer" data-parallax="0.6">
+                <svg class="shape shape-hexagon" viewBox="0 0 100 100" width="90" height="90">
+                    <polygon points="50,3 93,25 93,75 50,97 7,75 7,25" fill="none" stroke="url(#grad-coral)" stroke-width="1"/>
+                </svg>
+                <svg class="shape shape-triangle" viewBox="0 0 100 100" width="55" height="55">
+                    <polygon points="50,10 90,90 10,90" fill="none" stroke="url(#grad-violet)" stroke-width="1.5"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- SVG gradient defs shared by shapes -->
+        <svg class="svg-defs" aria-hidden="true" style="position:absolute;width:0;height:0;">
+            <defs>
+                <linearGradient id="grad-coral" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff6b4a"/>
+                    <stop offset="100%" stop-color="#d946ef"/>
+                </linearGradient>
+                <linearGradient id="grad-magenta" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#d946ef"/>
+                    <stop offset="100%" stop-color="#7c3aed"/>
+                </linearGradient>
+                <linearGradient id="grad-violet" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#7c3aed"/>
+                    <stop offset="100%" stop-color="#ff6b4a"/>
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- SVG mesh / grid background -->
+        <svg class="hero-mesh" aria-hidden="true" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <pattern id="mesh-grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#mesh-grid)"/>
+        </svg>
+
+        <div class="container hero-content">
+            <p class="hero-greeting">Hello, my name is</p>
+            <h1 class="hero-name" data-text="Feng Ting Guo">Feng Ting Guo</h1>
+            <p class="hero-subtitle">Software Developer · Digital Artist</p>
+            <a href="#project" class="btn-cta">View My Work ↓</a>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <!-- Dot-grid pattern background -->
+        <svg class="bg-dot-grid" aria-hidden="true" data-parallax="0.3">
+            <defs>
+                <pattern id="dot-grid" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.07)"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dot-grid)"/>
+        </svg>
+
         <div class="container">
-            <div class="row full-screen">
-                <div class="home-content">
-                    <div class="block">
-                        <h6>Hello, my name is</h6>
-                        <h1>Feng Ting Guo - Alex</h1>
-                        <h3>A Software Developer</h3>
-                        <div class="github-btn">
-                            <a href="https://github.com/TrueFengTingGuo">Go To My GitHub</a>
+            <div class="section-header reveal">
+                <h2 class="section-title">About Me</h2>
+                <span class="title-accent"></span>
+            </div>
+
+            <div class="about-grid">
+                <div class="about-image reveal">
+                    <div class="image-border-glow"></div>
+                    <img src="Images/About-me-selfpic.png" alt="Feng Ting Guo" loading="lazy">
+                </div>
+
+                <div class="about-text">
+                    <div class="reveal">
+                        <h3 class="about-name">I'm Feng Ting Guo</h3>
+                        <p class="about-role">A <span class="accent">Software Developer</span></p>
+                        <p class="about-quote">Always do what you're afraid to do.</p>
+                    </div>
+
+                    <div class="about-info reveal">
+                        <h4 class="info-label">Education</h4>
+                        <p>Bachelor of Computer Science, Honors, Carleton University, Ottawa, Ontario</p>
+                    </div>
+
+                    <div class="about-experience reveal">
+                        <h4 class="info-label">Work Experience</h4>
+                        <div class="timeline">
+                            <div class="timeline-entry">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <h5>Software Developer – Contract 2021-2025</h5>
+                                    <p class="timeline-place">Canada Revenue Agency, Ottawa, Ontario</p>
+                                    <ul class="work-list">
+                                        <li>Developed the front-end using Angular and Nodejs</li>
+                                        <li>Implemented back-end API calls using Java</li>
+                                        <li>Writing SQL for testing and demo</li>
+                                        <li>Worked with Database team on database calls with system design in mind</li>
+                                        <li>Collaborated with clients and business teams to translate requirements into clear and accurate development stories</li>
+                                        <li>Provided time assessments on new functionality</li>
+                                        <li>Provided short term and long term fix while bug occurs</li>
+                                        <li>Building friendly relationship with other staffs quickly</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- End Home-->
 
-    <!-- Start About -->
-    <section class="about-me" id="about">
+    <!-- Skills Section -->
+    <section class="skills" id="skills">
         <div class="container">
-            <div class="row">
-                <div class="section-title">
-                    <h1>About Me</h1>
-                    <p class="small">Information About me</p> <!--<p> tag defines a paragraph.-->
-                </div>
+            <div class="section-header reveal">
+                <h2 class="section-title">Skills</h2>
+                <span class="title-accent"></span>
             </div>
-            <div class="row">
-                <div class="about-content">
-                    <div class="row">
-                        <div class="img">
-                            <img src="Images/About-me-selfpic.png" alt="about-me">
-                        </div>
 
-                        <div class="text">
-                            <div class="font-30 bold-font">I'M Feng Ting Guo</div>
-                            <h6>A <span>Software Developer</span>
-                                <!--A <span> element used to color a part of a text:-->
-                                <div class="grey-font font-15">Always do what you're afraid to do.</div>
+            <div class="skills-layout">
+                <div class="skills-grid">
 
-                                <br>
-
-                                <div class="info">
-                                    <div class="row">
-                                        <div class="label font-25">Education</div>
-                                        <div class="grey-font">Bachelor of Computer Science, Honors , Carleton
-                                            University, Ottawa, Ontario</div>
-                                    </div>
-                                </div>
-
-
-                                <div class="work-experience">
-                                    <div class="label font-25">Work Experience</div>
-                                    <br>
-                                    <div>
-                                        <div class="font-15">Software Developer – Contract 2021-2025 </div>
-                                        <div class="grey-font font-15"> Canada Revenue Agency Ottawa, Ontario</div>
-                                        <div class="work-content">
-                                            <li class="font-13"> Developed the front-end using Angular and Nodejs</li>
-                                            <li class="font-13"> Implemented back-end API calls using Java</li>
-                                            <li class="font-13"> Writing SQL for testing and demo</li>
-                                            <li class="font-13"> Worked with Database team on database calls with system
-                                                design in mind</li>
-                                            <li class="font-13"> Collaborated with clients and business teams to
-                                                translate requirements into clear and accurate development stories,</li>
-                                            <li class="font-13"> Provided time assessments on new functionality</li>
-                                            <li class="font-13"> Provided short term and long term fix while bug occurs
-                                            </li>
-                                            <li class="font-13"> Building friendly relationship with other staffs
-                                                quickly</li>
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="skill-box reveal" style="--index:0">
+                        <h6>Java</h6>
+                        <p class="skill-detail">Used for back-end API calls, application logic, and database-connected services in professional projects.</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="80%">
+                                <span>80%</span>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="skill-box reveal" style="--index:1">
+                        <h6>C++</h6>
+                        <p class="skill-detail">Sensor hardware reading, robotics programming</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="80%">
+                                <span>80%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-box reveal" style="--index:2">
+                        <h6>C#</h6>
+                        <p class="skill-detail">Used with Unity to build gameplay systems, side-scrolling mechanics, and other game features.</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="75%">
+                                <span>75%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-box reveal" style="--index:3">
+                        <h6>Python</h6>
+                        <p class="skill-detail">Used for scripting, problem solving, and building tools for automation.</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="80%">
+                                <span>80%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-box reveal" style="--index:4">
+                        <h6>HTML</h6>
+                        <p class="skill-detail">Used to structure this portfolio and other web pages with clear layouts and content sections.</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="80%">
+                                <span>80%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="skill-box reveal" style="--index:5">
+                        <h6>JavaScript</h6>
+                        <p class="skill-detail">Used for interactive website behavior, animations, sliders, and dynamic user interface features.</p>
+                        <div class="skill-bar">
+                            <div class="skill-bar-in" data-width="80%">
+                                <span>80%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="skills-illustration" data-parallax="0.15">
+                    <img src="Images/Flower and girl.jpg" alt="Digital painting of flower and girl" loading="lazy">
                 </div>
             </div>
         </div>
-
     </section>
-    <!-- End About -->
 
-
-    <!-- Start Skills -->
-    <section class="skills">
-        <div class="container">
-            <div class="row">
-                <div class="section-title">
-                    <p>Rate My Programming Skills</p>
-                </div>
-
-            </div>
-            <div class="row align-items-center">
-                <div class="skills-content">
-
-                    <div class="row">
-
-
-                        <div class="skill-box">
-                            <h6>Java</h6>
-                            <p class="skill-detail">Used for back-end API calls, application logic, and
-                                database-connected services in professional projects.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="skill-box">
-                            <h6>C++</h6>
-                            <p class="skill-detail">Sensor hardware reading, robotics programming</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="skill-box">
-                            <h6>C#</h6>
-                            <p class="skill-detail">Used with Unity to build gameplay systems, side-scrolling mechanics,
-                                and other game features.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 75%">
-                                    <span>75%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>Python</h6>
-                            <p class="skill-detail">Used for scripting, problem solving, and building tools for
-                                automation.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>HTML</h6>
-                            <p class="skill-detail">Used to structure this portfolio and other web pages with clear
-                                layouts and content sections.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>JavaScript</h6>
-                            <p class="skill-detail">Used for interactive website behavior, animations, sliders, and
-                                dynamic user interface features.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="img">
-                    <img src="Images/Flower and girl.jpg" alt="skill">
-                </div>
-
-            </div>
-        </div>
-    </section>
-    <!-- End Skills -->
-
-
-    <!-- Start Projects -->
+    <!-- Projects Section -->
     <section class="projects" id="project">
+        <!-- SVG wave divider -->
+        <div class="wave-divider" aria-hidden="true">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path class="wave-path" d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,70 1440,80 L1440,0 L0,0 Z" fill="#111118"/>
+            </svg>
+        </div>
+
         <div class="container">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Programming Projects</h1>
-                    <p>This is what I do</p>
-                </div>
+            <div class="section-header reveal">
+                <h2 class="section-title">Programming Projects</h2>
+                <span class="title-accent"></span>
             </div>
-            <div class="row">
-                <div class="project-gallery">
 
-                    <div class="item">
-                        <img src="Images/Bajump_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Side Scrolling Game: Using Unity Game Engine</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/BaJump">See It On GitHub</a>
-                            </div>
-                        </div>
+            <div class="project-gallery">
+
+                <div class="project-card reveal" style="--index:0">
+                    <img src="Images/Bajump_video.gif" alt="Side Scrolling Game: BaJump" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>Side Scrolling Game: Using Unity Game Engine</h3>
+                        <a href="https://github.com/TrueFengTingGuo/BaJump" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
                     </div>
-
-
-                    <div class="item">
-                        <img src="Images/openglHelicopter.png" alt="project">
-                        <div class="overlay">
-                            <h1>Game: using OpenGL</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/C-Side-Scrolling-Game">See It On GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="item">
-                        <img src="Images/Demolish_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Game & AI</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/Demolish">See It On GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="item">
-                        <img src="Images/Tower_defence_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Game: Group Project</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/LI-YIMAI/Last-Zerzura">See It On GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div class="item">
-                        <img src="Images/website.png" alt="project">
-                        <div class="overlay">
-                            <h1>My Portfolio: Website</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/FengTingGuoPersonalPortfolio">See It On
-                                    GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div class="item">
-                        <img src="Images/Octree_game_screenshot.png" alt="project">
-                        <div class="overlay">
-                            <h1>3D Game: Using Octree Data Structure</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/Octree_DataStructure_OpenGL-3D">See It On
-                                    GitHub</a>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+
+                <div class="project-card reveal" style="--index:1">
+                    <img src="Images/openglHelicopter.png" alt="OpenGL Game" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>Game: using OpenGL</h3>
+                        <a href="https://github.com/TrueFengTingGuo/C-Side-Scrolling-Game" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card reveal" style="--index:2">
+                    <img src="Images/Demolish_video.gif" alt="Demolish Game & AI" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>Game &amp; AI</h3>
+                        <a href="https://github.com/TrueFengTingGuo/Demolish" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card reveal" style="--index:3">
+                    <img src="Images/Tower_defence_video.gif" alt="Tower Defence Group Project" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>Game: Group Project</h3>
+                        <a href="https://github.com/LI-YIMAI/Last-Zerzura" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card reveal" style="--index:4">
+                    <img src="Images/website.png" alt="Portfolio Website" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>My Portfolio: Website</h3>
+                        <a href="https://github.com/TrueFengTingGuo/FengTingGuoPersonalPortfolio" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card reveal" style="--index:5">
+                    <img src="Images/Octree_game_screenshot.png" alt="3D Game with Octree" loading="lazy">
+                    <div class="project-overlay">
+                        <h3>3D Game: Using Octree Data Structure</h3>
+                        <a href="https://github.com/TrueFengTingGuo/Octree_DataStructure_OpenGL-3D" class="btn-github" target="_blank" rel="noopener noreferrer">See It On GitHub</a>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
-    <!-- End Projects -->
 
-
-
-    <!-- Start Painting -->
+    <!-- Paintings Section -->
     <section class="painting" id="painting">
+        <!-- SVG brush-stroke decorative elements -->
+        <svg class="brush-stroke brush-stroke-left" aria-hidden="true" viewBox="0 0 200 400" preserveAspectRatio="none">
+            <path d="M10,50 C80,80 30,200 60,350" fill="none" stroke="url(#grad-coral)" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        </svg>
+        <svg class="brush-stroke brush-stroke-right" aria-hidden="true" viewBox="0 0 200 400" preserveAspectRatio="none">
+            <path d="M190,30 C120,100 170,250 140,380" fill="none" stroke="url(#grad-violet)" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        </svg>
+
         <div class="container">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Digital Paintings</h1>
-                    <p>This is my Hobby</p>
-                </div>
+            <div class="section-header reveal">
+                <h2 class="section-title">Digital Paintings</h2>
+                <span class="title-accent"></span>
             </div>
 
-            <div class="row">
-                <div class="painting-gallery">
-
-                    <div class="gallery-slider">
-                    </div>
-
-                    <!-- slide controler -->
-                    <div class="slide-controls"></div>
-
-
-                </div>
+            <div class="painting-gallery">
+                <div class="gallery-slider"></div>
+                <div class="slide-controls"></div>
             </div>
         </div>
     </section>
-    <!-- End Painting -->
 
+    <!-- Contact / Footer -->
+    <footer class="contact-footer" id="contact">
+        <!-- SVG wave divider -->
+        <div class="wave-divider" aria-hidden="true">
+            <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path class="wave-path" d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,70 1440,80 L1440,0 L0,0 Z" fill="#111118"/>
+            </svg>
+        </div>
 
-    <!-- Start Footer -->
-    <footer>
-        <div class="container" id="contact">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Contact Me</h1>
-                    <p>guofengting98@gmail.com</p>
-                </div>
-            </div>
+        <!-- SVG orbiting rings -->
+        <div class="orbit-rings" aria-hidden="true">
+            <svg class="orbit-ring orbit-ring-1" viewBox="0 0 400 400">
+                <ellipse cx="200" cy="200" rx="180" ry="60" fill="none" stroke="rgba(255,107,74,0.08)" stroke-width="1"/>
+            </svg>
+            <svg class="orbit-ring orbit-ring-2" viewBox="0 0 400 400">
+                <ellipse cx="200" cy="200" rx="150" ry="80" fill="none" stroke="rgba(217,70,239,0.06)" stroke-width="1"/>
+            </svg>
+            <svg class="orbit-ring orbit-ring-3" viewBox="0 0 400 400">
+                <ellipse cx="200" cy="200" rx="190" ry="50" fill="none" stroke="rgba(124,58,237,0.07)" stroke-width="1"/>
+            </svg>
+        </div>
+
+        <div class="container contact-content">
+            <h2 class="reveal">Contact Me</h2>
+            <p class="contact-email" data-typewriter="guofengting98@gmail.com">guofengting98@gmail.com</p>
+            <button class="copy-btn" aria-label="Copy email to clipboard" data-email="guofengting98@gmail.com">
+                <svg class="copy-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4 12 10 18 20 6"/>
+                </svg>
+                <span class="copy-tooltip">Copied!</span>
+            </button>
         </div>
     </footer>
-    <!-- End Footer -->
 
     <!-- Cat Pet -->
     <div id="pet">
