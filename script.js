@@ -228,14 +228,14 @@ window.onload = load;
     if (hamburger && navLinksContainer) {
         hamburger.addEventListener('click', function () {
             hamburger.classList.toggle('active');
-            navLinksContainer.classList.toggle('active');
+            navLinksContainer.classList.toggle('open');
         });
 
         // Close mobile nav on link click
         navLinks.forEach(function (link) {
             link.addEventListener('click', function () {
                 hamburger.classList.remove('active');
-                navLinksContainer.classList.remove('active');
+                navLinksContainer.classList.remove('open');
             });
         });
     }
