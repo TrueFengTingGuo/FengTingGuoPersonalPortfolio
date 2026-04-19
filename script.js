@@ -171,6 +171,30 @@ let timer = setInterval(autoPlay, 2000);
 
 window.onload = load;
 
+// Skill bar animation on scroll into view
+(function () {
+    const bars = document.querySelectorAll('.skill-bar-in');
+    bars.forEach(function (bar) {
+        const inlineWidth = bar.style.width;
+        bar.style.setProperty('--target-width', inlineWidth);
+    });
+
+    const skillsSection = document.querySelector('.skills');
+    if (skillsSection && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    bars.forEach(function (bar) {
+                        bar.classList.add('animate');
+                    });
+                    observer.unobserve(skillsSection);
+                }
+            });
+        }, { threshold: 0.2 });
+        observer.observe(skillsSection);
+    }
+}());
+
 // header fixed
 
 window.onscroll = function () {

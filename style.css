@@ -458,6 +458,13 @@ header .navbar ul li a.active::before {
     color: #000000;
 }
 
+.skills .skills-content .skill-box .skill-detail {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgb(92, 92, 92);
+    margin: 0 0 12px;
+}
+
 .skills .skills-content .skill-box .skill-bar {
 
     background-color: rgb(202, 202, 202);
@@ -469,7 +476,12 @@ header .navbar ul li a.active::before {
     background-color: rgb(255, 137, 91);
     height: 100%;
     position: absolute;
+    width: 0 !important;
+    transition: width 1.2s ease-in-out;
+}
 
+.skills .skills-content .skill-box .skill-bar .skill-bar-in.animate {
+    width: var(--target-width) !important;
 }
 
 .skills .skills-content .skill-box .skill-bar .skill-bar-in span {
