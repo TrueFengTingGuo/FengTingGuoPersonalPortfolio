@@ -1075,6 +1075,14 @@ button {
         scroll-behavior: auto !important;
     }
 
+    body {
+        cursor: auto;
+    }
+
+    .custom-cursor {
+        display: none;
+    }
+
     .hero-greeting,
     .hero-name,
     .hero-subtitle,
