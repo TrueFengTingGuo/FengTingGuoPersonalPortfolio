@@ -328,7 +328,7 @@ window.onload = load;
             if (entry.isIntersecting) {
                 bars.forEach(function (bar) {
                     var targetWidth = bar.getAttribute('data-width') || '0%';
-                    bar.style.width = targetWidth;
+                    bar.style.setProperty('--target-width', targetWidth);
                     bar.classList.add('animate');
 
                     // Animate the number counting up
