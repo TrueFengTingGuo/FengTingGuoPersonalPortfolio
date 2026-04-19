@@ -48,99 +48,62 @@ async function load() {
 
     }
     await generateGallery();
-    start(); //go to start function
-
+    start();
 }
 
 function start() {
-
     totalWidth = 0;
-
-    //set width of each image
     for (let i = 0; i < slides.length; i++) {
-        slides[i].style.width = (paintingGalleryWidth / itemPerSlide) - margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
-        slides[i].style.margin = margin / 2 + "px"; //  set margin to all four values of the margin
-
-
-
+        slides[i].style.width = (paintingGalleryWidth / itemPerSlide) - margin + "px";
+        slides[i].style.margin = margin / 2 + "px";
         totalWidth += paintingGalleryWidth / itemPerSlide;
-
     }
-
-    sliderContainer.style.width = totalWidth + "px"; //set the width of the displace div 
-
-
-    slideDots = Math.ceil(slides.length / itemPerSlide); //calculate how many dots need to display at the bottom
-
-    //slide dot creation process
+    sliderContainer.style.width = totalWidth + "px";
+    slideDots = Math.ceil(slides.length / itemPerSlide);
     for (let i = 0; i < slideDots; i++) {
-
-        const div = document.createElement("div");//create a new div object
-
+        const div = document.createElement("div");
         div.id = i;
-        div.setAttribute("onclick", "controlSlide(this)"); //set a function when clicked
-        if (i == 0) {
-            div.classList.add("active");
-        }
-
-        document.querySelector(".slide-controls").appendChild(div);//add it to the slide controls div
+        div.setAttribute("onclick", "controlSlide(this)");
+        if (i == 0) { div.classList.add("active"); }
+        document.querySelector(".slide-controls").appendChild(div);
     }
 }
 
-//auto slide the display image page
 let currentSlide = 0;
 let autoSlide = 0;
 
 function controlSlide(element) {
-    clearInterval(timer) //The clearInterval() method clears a timer set with the setInterval() method.
+    clearInterval(timer);
     timer = setInterval(autoPlay, 5000);
     autoSlide = element.id;
     currentSlide = element.id;
-    changeSlide(currentSlide)
+    changeSlide(currentSlide);
 }
 
 function changeSlide(currentSlide) {
     controlButtons = document.querySelector(".slide-controls").children;
-
     for (let i = 0; i < controlButtons.length; i++) {
-        controlButtons[i].classList.remove("active") //The classList property returns the class name(s) of an element, as a DOMTokenList object. This property is useful to add, remove and toggle CSS classes on an element.
+        controlButtons[i].classList.remove("active");
     }
-
-    controlButtons[currentSlide].classList.add("active")
-
-    sliderContainer.style.marginLeft = -(paintingGalleryWidth * currentSlide) + "px"; //set the style, the transition property will then trans to the proper position
+    controlButtons[currentSlide].classList.add("active");
+    sliderContainer.style.marginLeft = -(paintingGalleryWidth * currentSlide) + "px";
 }
 
-//autp play the slide
 function autoPlay() {
-
-    if (!slideDots || slideDots === 0) return; // gallery not ready yet
-
-    if (autoSlide == slideDots - 1) {
-        autoSlide = 0;
-    }
-    else {
-        autoSlide++;
-    }
-
-    changeSlide(autoSlide) //input the id of the slide
+    if (!slideDots || slideDots === 0) return;
+    if (autoSlide == slideDots - 1) { autoSlide = 0; }
+    else { autoSlide++; }
+    changeSlide(autoSlide);
 }
-
 
 async function generateGallery() {
-
     const gallery = document.querySelector('.gallery-slider');
-
     const apiUrl = 'https://api.github.com/repos/TrueFengTingGuo/FengTingGuoPersonalPortfolio/contents/Images/paintings';
-
     let imageFiles = [];
-
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error('API request failed: ' + response.status);
         const files = await response.json();
-
-        // Filter to only image files by extension
         const imageExtensions = /\.(jpg|jpeg|png|gif)$/i;
         imageFiles = files
             .filter(file => file.type === 'file' && imageExtensions.test(file.name))
@@ -148,8 +111,6 @@ async function generateGallery() {
     } catch (err) {
         console.error('Could not load paintings from GitHub API:', err);
     }
-
-    // String template for each item
     const itemTemplate =
         '<div class="item">' +
         '<img src="Images/paintings/{filename}" alt="painting">' +
@@ -157,7 +118,6 @@ async function generateGallery() {
         '<h1>Reference found from internet</h1>' +
         '</div>' +
         '</div>';
-
     let html = '';
     for (let i = 0; i < imageFiles.length; i++) {
         html += itemTemplate.replace('{filename}', imageFiles[i]);
@@ -165,51 +125,312 @@ async function generateGallery() {
     gallery.innerHTML += html;
 }
 
-
-
 let timer = setInterval(autoPlay, 2000);
 
 window.onload = load;
 
-// Skill bar animation on scroll into view
+// --- 2. Custom Cursor ---
 (function () {
-    const bars = document.querySelectorAll('.skill-bar-in');
-    bars.forEach(function (bar) {
-        const inlineWidth = bar.style.width;
-        bar.style.setProperty('--target-width', inlineWidth);
+    var cursor = document.querySelector('.custom-cursor');
+    if (!cursor) return;
+    var hoverTargets = 'a, button, .btn-cta, .btn-github, .project-card';
+
+    document.addEventListener('mousemove', function (e) {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
     });
 
-    const skillsSection = document.querySelector('.skills');
-    if (skillsSection && 'IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(function (entries) {
+    document.addEventListener('mouseover', function (e) {
+        if (e.target.closest(hoverTargets)) {
+            cursor.classList.add('cursor-hover');
+        }
+    });
+    document.addEventListener('mouseout', function (e) {
+        if (e.target.closest(hoverTargets)) {
+            cursor.classList.remove('cursor-hover');
+        }
+    });
+}());
+
+// --- 3. Scroll Progress Bar ---
+(function () {
+    var bar = document.querySelector('.scroll-progress-bar');
+    if (!bar) return;
+
+    function updateProgress() {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        var progress = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+        bar.style.transform = 'scaleX(' + progress + ')';
+    }
+
+    window.addEventListener('scroll', function () {
+        requestAnimationFrame(updateProgress);
+    }, { passive: true });
+    updateProgress();
+}());
+
+// --- 4. Navigation (scroll class, active tracking, hamburger) ---
+(function () {
+    var header = document.querySelector('.site-header');
+    var navLinks = document.querySelectorAll('.nav-links a');
+    var sections = [];
+    var hamburger = document.querySelector('.hamburger');
+    var navLinksContainer = document.querySelector('.nav-links');
+
+    // Build sections array from nav links
+    navLinks.forEach(function (link) {
+        var id = link.getAttribute('href');
+        if (id && id.startsWith('#')) {
+            var section = document.querySelector(id);
+            if (section) sections.push({ el: section, link: link });
+        }
+    });
+
+    // Add .scrolled class past 100vh
+    function updateHeaderScroll() {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > window.innerHeight) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }
+    window.addEventListener('scroll', function () {
+        requestAnimationFrame(updateHeaderScroll);
+    }, { passive: true });
+    updateHeaderScroll();
+
+    // IntersectionObserver for active section tracking
+    if ('IntersectionObserver' in window) {
+        var observerOptions = { rootMargin: '-40% 0px -55% 0px' };
+        var sectionObserver = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
-                    bars.forEach(function (bar) {
-                        bar.classList.add('animate');
+                    var targetId = '#' + entry.target.id;
+                    navLinks.forEach(function (link) {
+                        if (link.getAttribute('href') === targetId) {
+                            link.classList.add('active');
+                        } else {
+                            link.classList.remove('active');
+                        }
                     });
-                    observer.unobserve(skillsSection);
                 }
             });
-        }, { threshold: 0.2 });
-        observer.observe(skillsSection);
+        }, observerOptions);
+
+        sections.forEach(function (s) {
+            sectionObserver.observe(s.el);
+        });
+    }
+
+    // Hamburger toggle
+    if (hamburger && navLinksContainer) {
+        hamburger.addEventListener('click', function () {
+            hamburger.classList.toggle('active');
+            navLinksContainer.classList.toggle('active');
+        });
+
+        // Close mobile nav on link click
+        navLinks.forEach(function (link) {
+            link.addEventListener('click', function () {
+                hamburger.classList.remove('active');
+                navLinksContainer.classList.remove('active');
+            });
+        });
     }
 }());
 
-// header fixed
-
-window.onscroll = function () {
-
-    const docScrollTop = document.documentElement.scrollTop;
-
-    if (window.innerWidth > 991) {
-        if (docScrollTop > 100) {
-            document.querySelector("header").classList.add("fixed")
-        }
-        else {
-            document.querySelector("header").classList.remove("fixed")
+// --- 5. Hero Animations (letter split, staggered reveal, scroll indicator) ---
+(function () {
+    var heroName = document.querySelector('.hero-name');
+    if (heroName) {
+        var text = heroName.textContent;
+        heroName.textContent = '';
+        for (var i = 0; i < text.length; i++) {
+            var span = document.createElement('span');
+            span.textContent = text[i] === ' ' ? '\u00A0' : text[i];
+            span.style.animationDelay = (i * 30) + 'ms';
+            heroName.appendChild(span);
         }
     }
-}
+
+    // Stagger hero elements using classes that trigger CSS animations
+    var greeting = document.querySelector('.hero-greeting');
+    var subtitle = document.querySelector('.hero-subtitle');
+    var cta = document.querySelector('.btn-cta');
+
+    if (greeting) greeting.classList.add('animate-in');
+    setTimeout(function () {
+        if (heroName) heroName.classList.add('animate-in');
+    }, 200);
+    setTimeout(function () {
+        if (subtitle) subtitle.classList.add('animate-in');
+    }, 600);
+    setTimeout(function () {
+        if (cta) cta.classList.add('animate-in');
+    }, 900);
+
+    // Scroll indicator fades out past 100vh
+    var scrollIndicator = document.querySelector('.scroll-indicator');
+    if (scrollIndicator) {
+        window.addEventListener('scroll', function () {
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            if (scrollTop > window.innerHeight) {
+                scrollIndicator.style.opacity = '0';
+            } else {
+                scrollIndicator.style.opacity = String(1 - scrollTop / window.innerHeight);
+            }
+        }, { passive: true });
+    }
+}());
+
+// --- 6. Reveal on Scroll (IntersectionObserver) ---
+(function () {
+    if (!('IntersectionObserver' in window)) return;
+    var reveals = document.querySelectorAll('.reveal');
+    var revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    reveals.forEach(function (el) {
+        revealObserver.observe(el);
+    });
+}());
+
+// --- 7. Skill Bar Animation ---
+(function () {
+    var skillsSection = document.querySelector('.skills');
+    if (!skillsSection || !('IntersectionObserver' in window)) return;
+
+    var bars = document.querySelectorAll('.skill-bar-in');
+
+    function animateCountUp(span, targetNum, duration) {
+        var start = 0;
+        var startTime = null;
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            var progress = Math.min((timestamp - startTime) / duration, 1);
+            var current = Math.round(progress * targetNum);
+            span.textContent = current + '%';
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                bars.forEach(function (bar) {
+                    var targetWidth = bar.getAttribute('data-width') || '0%';
+                    bar.style.width = targetWidth;
+                    bar.classList.add('animate');
+
+                    // Animate the number counting up
+                    var span = bar.querySelector('span');
+                    if (span) {
+                        var num = parseInt(targetWidth, 10) || 0;
+                        animateCountUp(span, num, 1200);
+                    }
+                });
+                observer.unobserve(skillsSection);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    observer.observe(skillsSection);
+}());
+
+// --- 8. Parallax ---
+(function () {
+    var parallaxEls = document.querySelectorAll('[data-parallax]');
+    if (!parallaxEls.length) return;
+
+    function updateParallax() {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        parallaxEls.forEach(function (el) {
+            var rate = parseFloat(el.getAttribute('data-parallax')) || 0;
+            el.style.transform = 'translateY(' + (scrollTop * rate) + 'px)';
+        });
+    }
+
+    window.addEventListener('scroll', function () {
+        requestAnimationFrame(updateParallax);
+    }, { passive: true });
+    updateParallax();
+}());
+
+// --- 9. Project Card 3D Tilt ---
+(function () {
+    var cards = document.querySelectorAll('.project-card');
+    cards.forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+            var rect = card.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            var centerX = rect.width / 2;
+            var centerY = rect.height / 2;
+            var rotateY = ((x - centerX) / centerX) * 8;
+            var rotateX = ((centerY - y) / centerY) * 8;
+            card.style.transform = 'perspective(600px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+        });
+        card.addEventListener('mouseleave', function () {
+            card.style.transform = '';
+        });
+    });
+}());
+
+// --- 10. Contact Typewriter + Copy to Clipboard ---
+(function () {
+    var emailEl = document.querySelector('.contact-email[data-typewriter]');
+    var typewriterDone = false;
+
+    if (emailEl && 'IntersectionObserver' in window) {
+        var fullText = emailEl.getAttribute('data-typewriter');
+        emailEl.textContent = '';
+
+        var contactObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting && !typewriterDone) {
+                    typewriterDone = true;
+                    var idx = 0;
+                    var interval = setInterval(function () {
+                        if (idx < fullText.length) {
+                            emailEl.textContent += fullText[idx];
+                            idx++;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 40);
+                    contactObserver.unobserve(emailEl);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        contactObserver.observe(emailEl);
+    }
+
+    // Copy to clipboard
+    var copyBtn = document.querySelector('.copy-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var email = copyBtn.getAttribute('data-email');
+            if (navigator.clipboard && email) {
+                navigator.clipboard.writeText(email).then(function () {
+                    copyBtn.classList.add('copied');
+                    setTimeout(function () {
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                });
+            }
+        });
+    }
+}());
 
 // ---- Pixel Art Cat Pet - State Machine ----
 //
@@ -550,7 +771,6 @@ window.addEventListener('DOMContentLoaded', function () {
     pet.style.top = catY + 'px';
     requestAnimationFrame(loop);
 });
-
 
 /* ============================================================
     Water Background – Vector-Field Navier-Stokes Fluid Simulation
