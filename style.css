@@ -1,15 +1,145 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ==========================================================================
+   Code & Canvas — Dark Portfolio Theme
+   Fonts loaded via HTML <link>: Space Grotesk (headings), Inter (body)
+   ========================================================================== */
+
+/* --- 1. Reset & Base --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    margin: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    color: #e8e4e0;
+    background-color: #06070a;
+    line-height: 1.6;
+    overflow-x: hidden;
+    cursor: none;
 }
 
-/* Fluid ripple background canvas */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: none;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Section shared styles */
+.section-header {
+    margin-bottom: 48px;
+}
+
+.section-title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: inline-block;
+}
+
+.title-accent {
+    display: block;
+    width: 60px;
+    height: 3px;
+    margin-top: 12px;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef, #7c3aed);
+    border-radius: 2px;
+}
+
+.accent {
+    background: linear-gradient(90deg, #ff6b4a, #d946ef);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.info-label {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    color: #e8e4e0;
+}
+
+/* --- 2. Custom Cursor --- */
+.custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e8e4e0;
+    mix-blend-mode: difference;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: width 0.25s ease, height 0.25s ease;
+    will-change: left, top;
+}
+
+.custom-cursor.cursor-hover {
+    width: 48px;
+    height: 48px;
+}
+
+/* --- 3. Scroll Progress Bar --- */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 10001;
+    background: transparent;
+}
+
+.scroll-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef, #7c3aed);
+    transform: scaleX(0);
+    transform-origin: left;
+    will-change: transform;
+}
+
+/* --- 4. Fluid Background Canvas --- */
 #fluid-bg {
     position: fixed;
     top: 0;
@@ -20,766 +150,889 @@ body {
     pointer-events: none;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-}
-
-.container {
-    max-width: 1140px;
-    margin: auto;
-
-}
-
-.row {
-    display: flex;
-    /*The flex container becomes flexible by setting the display property to flex:*/
-    flex-wrap: wrap;
-
-}
-
-
-
-.font-10 {
-    font-size: 10px;
-}
-
-.font-13 {
-    font-size: 13px;
-}
-
-.font-15 {
-    font-size: 15px;
-}
-
-.font-20 {
-    font-size: 20px;
-}
-
-.font-25 {
-    font-size: 25px;
-}
-
-.font-30 {
-    font-size: 30px;
-}
-
-.bold-font {
-    font-weight: bold;
-}
-
-.grey-font {
-    font-weight: 400;
-    color: rgb(124, 124, 124);
-    margin: 0;
-}
-
-
-header {
-    position: absolute;
-    /*The element is positioned relative to its first positioned (not static) ancestor element*/
-    left: 0px;
-    right: 0px;
-    border-bottom: 1px solid #423940;
-    background-color: rgba(85, 54, 54, 0.55);
-    padding: 0px 15px;
-    z-index: 10;
-    /* property specifies the stack order of an element.*/
-
-}
-
-header .fixed {
-
-    border-color: rgb(255, 255, 255);
+/* --- 5. Navigation --- */
+.site-header {
     position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    border-bottom: 1px solid transparent;
 }
 
-header .row {
+.site-header.scrolled {
+    background: rgba(6, 7, 10, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 2px 24px rgba(0, 0, 0, 0.3);
+}
 
+.nav-row {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    /*grounp children in the center*/
+    height: 72px;
 }
 
-header .brand-name a {
-    text-decoration: none;
-    font-size: 22px;
-    font-weight: 600;
-    color: white;
+.logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    color: #e8e4e0;
     position: relative;
-    /*The element is positioned relative to its normal position, so "left:20px" adds 20 pixels to the element's LEFT position*/
-
+    z-index: 1001;
 }
 
-header .fixed .brand-name a {
-
-    color: white;
-
-
+.nav-links {
+    display: flex;
+    gap: 32px;
 }
 
-header .navbar ul {
-    /*list container mod*/
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-header .navbar ul li {
-    display: inline-block;
-    /*one row table*/
-    margin-left: 35px;
-}
-
-header .navbar ul li a {
-    font-size: 20px;
-    text-decoration: none;
-    /*Sets the kind of text decoration to use (like underline, overline, line-through)*/
-    line-height: 72px;
-    color: white;
-    display: block;
-    /*Displays an element as a block element (like <p>). It starts on a new line, and takes up the whole width*/
-    font-weight: 600;
+.nav-links li a {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: #e8e4e0;
     position: relative;
+    padding: 4px 0;
+    transition: color 0.3s ease;
 }
 
-header .navbar ul li a::before {
-    /* inserts something before the content of each selected element(s).*/
+.nav-links li a::after {
     content: '';
-    height: 3px;
-    background-color: white;
-    width: 0%;
     position: absolute;
-    /*The element is positioned relative to its first positioned (not static) ancestor element*/
-    left: 0px;
-    bottom: 0px;
-    transition: all 0.2s ease;
-
-}
-
-header .fixed .navbar ul li a {
-    position: fixed;
-}
-
-header .navbar ul li a:hover:before {
+    bottom: -2px;
+    left: 50%;
     width: 100%;
-    left: 0;
-    /*wired bug where there is some left over white line*/
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef);
+    transform: scaleX(0) translateX(-50%);
+    transform-origin: center;
+    transition: transform 0.3s ease;
 }
 
-header .navbar ul li a.active::before {
-    /*A link becomes active when you click on it.*/
-    width: 100%;
-    left: 0;
-    /*wired bug where there is some left over white line*/
+.nav-links li a:hover::after,
+.nav-links li a.active::after {
+    transform: scaleX(1) translateX(-50%);
 }
 
-
-
-
-
-/*Home*/
-
-.home {
-    min-height: 100vh;
-    /*Relative to 1% of the height of the viewport**/
-    background-image: url("Images/Fruit.jpg");
-    background-size: cover;
-    background-position: center;
-    padding: 15px;
-    position: relative;
-    z-index: 1;
+.nav-links li a:hover {
+    color: #ff6b4a;
 }
 
-.home .full-screen {
-
-    min-height: 100vh;
-
-}
-
-.home .home-content {
-
-    flex: 0 0 100%;
-    /*flex has 3 property  flex-grow flex-shrink flex-basis;*/
-    /*flex-grow A number specifying how much the item will grow relative to the rest of the flexible items*/
-    /*flex-shrink 	A number specifying how much the item will shrink relative to the rest of the flexible items*/
-    /*flex-basis 	The length of the item. Legal values: "auto", "inherit", or a number followed by "%", "px", "em" or any other length unit*/
-    max-width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-
-}
-
-.home .home-content .block {
-
-
-    flex: 0 0 75%;
-    max-width: 75%;
-    padding-left: 20px;
-    border-left: 5px solid white;
-
-
-}
-
-.home .home-content .block h6 {
-
-    color: white;
-    font-size: 25px;
-    font-weight: 500;
-    /*imported font*/
-    margin: 0;
-    /*properties are used to create space around elements, outside of any defined borders. top right bottom  left*/
-    padding: 0;
-
-}
-
-.home .home-content .block h1 {
-
-    color: white;
-    font-size: 65px;
-    font-weight: 600;
-    /*imported font*/
-
-    padding: 0;
-
-}
-
-.home .home-content .block h3 {
-
-    color: white;
-    font-size: 30px;
-    font-weight: 500;
-    /*imported font*/
-    margin: 0;
-    padding: 0;
-
-}
-
-.home .home-content .block .github-btn {
-
-    padding-top: 10px;
-}
-
-
-.home .home-content .block .github-btn a {
-
-    border-radius: 10px;
-    color: white;
-    border: 3px solid white;
-    padding: 10px 25px;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 15px;
-    font-weight: 600;
-    /*imported font*/
-
-    transition: all .2s ease;
-    /*CSS transitions allows you to change property values smoothly, over a given duration.*/
-    background-color: transparent;
-}
-
-.home .home-content .block .github-btn a:hover {
-
-    background-image: url("Images/GitHub-Mark.png");
-    background-repeat: no-repeat;
-    background-size: 50% auto;
-    background-position: center;
-
-
-    background-color: white;
-    color: rgba(0, 0, 0, 0);
-}
-
-
-
-
-/*About me*/
-.about-me {
-    padding: 100px 15px 0 0;
-    position: relative;
-    z-index: 1;
-
-}
-
-.about-me .section-title {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin: 0 0 10px;
-    padding-bottom: 5px;
-}
-
-.about-me .section-title h1 {
-
-    display: inline-block;
-    font-size: 35px;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin: 0;
-}
-
-.about-me .section-title p {
-
-    display: block;
-    text-transform: uppercase;
-    font-size: 15px;
-    color: rgb(109, 109, 109);
-    font-weight: 400;
-    letter-spacing: 2px;
-}
-
-
-
-.about-me .about-content .img {
-    flex: 0 0 33%;
-    /*resize the image*/
-    max-width: 33%;
-}
-
-.about-me .about-content .img img {
-    width: 100%;
-    display: block;
-
-
-}
-
-.about-me .about-content .text {
-    flex: 0 0 66%;
-    max-width: 66%;
-    padding-left: 55px;
-}
-
-.about-me .about-content .text h4 {
-    font-size: 25px;
-    font-weight: 600;
-    margin: 0 0 5px;
-
-}
-
-.about-me .about-content .text h6 {
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0 0 15px;
-
-}
-
-.about-me .about-content .text h6 span {
-    color: rgb(255, 72, 0);
-
-}
-
-.about-me .about-content .text p {
-    font-size: 15px;
-    font-weight: 400;
-    color: rgb(124, 124, 124);
-    margin: 0;
-
-}
-
-.about-me .about-content .text .info {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 20px 0;
-
-}
-
-.about-me .about-content .label {
-
-    font-size: 20px;
-    font-weight: bold;
-}
-
-
-.work-content {
-    margin-left: 35px;
-    list-style: inside;
-}
-
-.skills {
-    padding: 50px 5px;
-    position: relative;
-    z-index: 1;
-}
-
-.skills .skills-content {
-    flex: 0 0 50%;
-    max-width: 50%;
-    padding-right: 30px;
-
-}
-
-.align-items-center {
-    display: flex;
-    align-items: center !important;
-    ;
+/* Hamburger */
+.hamburger {
+    display: none;
+    flex-direction: column;
     justify-content: center;
-
+    gap: 5px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    z-index: 1001;
 }
 
-.skills .img {
-    flex: 0 0 30%;
-    max-width: 30%;
-    margin-left: 35px;
-}
-
-.skills .img img {
-
-    width: 100%;
+.hamburger-line {
     display: block;
+    width: 100%;
+    height: 2px;
+    background: #e8e4e0;
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.skills .section-title p {
-    text-transform: uppercase;
-    font-size: 15px;
-    color: rgb(109, 109, 109);
-    font-weight: 400;
-    letter-spacing: 2px;
-
-
+.hamburger.active .hamburger-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
 }
 
-.skills .skills-content {
-    padding-left: 15px;
-
+.hamburger.active .hamburger-line:nth-child(2) {
+    opacity: 0;
 }
 
-.skills .skills-content .skill-box {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 35px;
-
+.hamburger.active .hamburger-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
-.skills .skills-content .skill-box h6 {
-    font-size: 15px;
-    font-weight: 500;
-    margin: 0 0 10px;
-    color: #000000;
-}
-
-.skills .skills-content .skill-box .skill-detail {
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgb(92, 92, 92);
-    margin: 0 0 12px;
-}
-
-.skills .skills-content .skill-box .skill-bar {
-
-    background-color: rgb(202, 202, 202);
-    height: 6px;
+/* --- 6. Hero Section --- */
+.hero {
     position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background-color: #06070a;
+    padding: 120px 0 80px;
+    z-index: 1;
+    overflow: hidden;
 }
 
-.skills .skills-content .skill-box .skill-bar .skill-bar-in {
-    background-color: rgb(255, 137, 91);
+.hero-shapes {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.shape-layer {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+}
+
+.shape {
+    position: absolute;
+    opacity: 0.25;
+}
+
+.shape-circle:nth-of-type(1) { top: 12%; left: 8%; animation: floatRotate 55s linear infinite; }
+.shape-hexagon:nth-of-type(1) { top: 60%; left: 15%; animation: floatRotate 65s linear infinite reverse; }
+.shape-triangle:nth-of-type(1) { top: 25%; right: 20%; animation: floatRotate 50s linear infinite; }
+.shape-circle:nth-of-type(2) { bottom: 20%; right: 10%; animation: floatRotate 70s linear infinite reverse; }
+.shape-hexagon:nth-of-type(2) { top: 10%; right: 8%; animation: floatRotate 60s linear infinite; }
+.shape-triangle:nth-of-type(2) { bottom: 30%; left: 25%; animation: floatRotate 45s linear infinite reverse; }
+
+@keyframes floatRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.hero-mesh {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-greeting {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    color: #8a8a8a;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: heroFadeIn 0.6s ease-out 0.2s forwards;
+}
+
+.hero-name {
+    font-size: clamp(2.8rem, 7vw, 5rem);
+    font-weight: 700;
+    margin-bottom: 12px;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    transform: translateY(40px);
+    animation: heroFadeIn 0.7s ease-out 0.5s forwards;
+}
+
+.hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    color: #8a8a8a;
+    margin-bottom: 32px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: heroFadeIn 0.8s ease-out 0.9s forwards;
+}
+
+.btn-cta {
+    display: inline-block;
+    padding: 14px 36px;
+    border: 2px solid #ff6b4a;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e8e4e0;
+    transition: background 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: heroFadeIn 0.6s ease-out 1.2s forwards;
+}
+
+.btn-cta:hover {
+    background: linear-gradient(135deg, #ff6b4a, #d946ef);
+    border-color: transparent;
+    transform: scale(1.05);
+    color: #fff;
+}
+
+@keyframes heroFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #8a8a8a;
+    z-index: 2;
+    animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+    50%      { opacity: 1;   transform: translateX(-50%) translateY(8px); }
+}
+
+/* SVG defs helper */
+.svg-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* --- 7. About Section --- */
+.about {
+    position: relative;
+    padding: 140px 0;
+    background-color: #111118;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-dot-grid {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+
+.about .container {
+    position: relative;
+    z-index: 1;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.about-image {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.about-image:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 40px rgba(255, 107, 74, 0.15);
+}
+
+.about-image img {
+    width: 100%;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.image-border-glow {
+    position: absolute;
+    inset: -3px;
+    border-radius: 14px;
+    z-index: 0;
+    background: conic-gradient(from 0deg, #ff6b4a, #d946ef, #7c3aed, #ff6b4a);
+    animation: borderGlowRotate 4s linear infinite;
+    filter: blur(6px);
+    opacity: 0.6;
+}
+
+@keyframes borderGlowRotate {
+    to { transform: rotate(360deg); }
+}
+
+.about-text {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.about-name {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.about-role {
+    font-size: 1.1rem;
+    color: #8a8a8a;
+}
+
+.about-quote {
+    font-style: italic;
+    color: #8a8a8a;
+    font-size: 0.95rem;
+    border-left: 3px solid #7c3aed;
+    padding-left: 16px;
+    margin-top: 4px;
+}
+
+.about-info p,
+.about-experience p {
+    font-size: 0.95rem;
+    color: #8a8a8a;
+    line-height: 1.7;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 24px;
+    margin-top: 12px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #ff6b4a, #7c3aed);
+    border-radius: 2px;
+}
+
+.timeline-entry {
+    position: relative;
+    padding-left: 20px;
+    padding-bottom: 16px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -24px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #d946ef;
+    border: 2px solid #111118;
+    z-index: 1;
+    animation: dotPop 0.4s ease-out;
+}
+
+@keyframes dotPop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.timeline-content h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #e8e4e0;
+}
+
+.timeline-place {
+    font-size: 0.85rem;
+    color: #8a8a8a;
+    margin-bottom: 8px;
+}
+
+.work-list {
+    list-style: disc;
+    padding-left: 20px;
+}
+
+.work-list li {
+    font-size: 0.88rem;
+    color: #8a8a8a;
+    line-height: 1.7;
+    list-style: disc;
+}
+
+/* --- 8. Skills Section --- */
+.skills {
+    position: relative;
+    padding: 140px 0;
+    background-color: #06070a;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.skills-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 48px;
+    align-items: start;
+}
+
+.skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+}
+
+.skill-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid #ff6b4a;
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.3s ease, border-left-width 0.3s ease, border-left-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.skill-box:hover {
+    transform: translateY(-4px);
+    border-left-width: 5px;
+    border-left-color: #d946ef;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.skill-box h6 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #e8e4e0;
+}
+
+.skill-detail {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #8a8a8a;
+    margin-bottom: 14px;
+}
+
+.skill-bar {
+    background: rgba(255, 255, 255, 0.08);
+    height: 6px;
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-bar-in {
+    background: linear-gradient(90deg, #ff6b4a, #d946ef);
     height: 100%;
     position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 3px;
     width: 0 !important;
-    transition: width 1.2s ease-in-out;
+    transition: width 1.2s ease-out;
 }
 
-.skills .skills-content .skill-box .skill-bar .skill-bar-in.animate {
+.skill-bar-in.animate {
     width: var(--target-width) !important;
 }
 
-.skills .skills-content .skill-box .skill-bar .skill-bar-in span {
+/* Shimmer after fill */
+.skill-bar-in::after {
+    content: '';
     position: absolute;
-    font-size: 16px;
-    font-weight: 400;
-    margin: 0;
-
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+    transform: translateX(-100%);
+    animation: none;
 }
 
-
-
-
-
-
-
-.projects {
-    padding: 100px 15px;
-    position: relative;
-    z-index: 1;
-
+.skill-bar-in.animate::after {
+    animation: shimmer 1s 1.2s ease forwards;
 }
 
-.text-center {
-
-    text-align: center !important;
-    /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+@keyframes shimmer {
+    to { transform: translateX(100%); }
 }
 
-.projects .section-title {
+.skill-bar-in span {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8a8a8a;
+}
+
+.skills-illustration {
+    border-radius: 12px;
+    overflow: hidden;
+    animation: floatY 4s ease-in-out infinite;
+    will-change: transform;
+}
+
+.skills-illustration img {
     width: 100%;
-    /*must need if i want to put text at the center*/
+    border-radius: 12px;
 }
 
-.projects .section-title h1 {
-
-    display: inline-block;
-    font-size: 35px;
-    text-transform: uppercase;
-    font-weight: 600;
-
+@keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
 }
 
-.projects .section-title p {
-    text-transform: uppercase;
-    font-size: 15px;
-    color: rgb(109, 109, 109);
-    font-weight: 400;
-    letter-spacing: 2px;
-    margin: 0 0 40px;
-
-}
-
-.projects .project-gallery {
-
-    flex: 0 0 100%;
-    max-width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    /*wrap CSS property sets whether flex items are forced onto one line or can wrap onto multiple lines. If wrapping is allowed, it sets the direction that lines are stacked.*/
-    justify-content: space-around;
-}
-
-.projects .project-gallery .item {
-
-    flex: 0 0 calc(33% - 10px);
-    max-width: calc(33% - 10px);
+/* --- 9. Projects Section --- */
+.projects {
     position: relative;
-    margin-bottom: 20px;
+    padding: 140px 0;
+    background-color: #111118;
+    z-index: 1;
+    overflow: hidden;
 }
 
-.projects .project-gallery .item img {
+/* Wave divider */
+.wave-divider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    pointer-events: none;
+}
 
+.wave-divider svg {
+    display: block;
+    width: 100%;
+    height: 80px;
+}
+
+.project-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.project-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0d0d14;
+    perspective: 800px;
+    cursor: none;
+}
+
+.project-card img {
     width: 100%;
     display: block;
-
+    transition: transform 0.5s ease;
 }
 
-.projects .project-gallery .item .overlay {
-
+.project-overlay {
     position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.5);
-
+    inset: 0;
     display: flex;
-    flex-wrap: nowrap;
     flex-direction: column;
-    align-items: center !important;
+    align-items: center;
     justify-content: center;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(6,7,10,0.3) 0%, rgba(6,7,10,0.85) 100%);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-
-.projects .project-gallery .item .overlay h1 {
-
-    color: white;
-    text-align: center !important;
+.project-card:hover .project-overlay {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-.projects .project-gallery .item .github-btn {
-
-    padding-top: 10px;
+.project-card:hover img {
+    transform: scale(1.05);
 }
 
+.project-overlay h3 {
+    font-size: clamp(0.9rem, 2vw, 1.15rem);
+    margin-bottom: 16px;
+    color: #e8e4e0;
+}
 
-.projects .project-gallery .item .github-btn a {
-
-    border-radius: 10px;
-    color: white;
-    border: 3px solid white;
-    padding: 10px 25px;
-    text-decoration: none;
+.btn-github {
     display: inline-block;
-    font-size: 15px;
+    padding: 10px 24px;
+    border: 2px solid #e8e4e0;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem;
     font-weight: 600;
-    /*imported font*/
-
-    transition: all .2s ease;
-    /*CSS transitions allows you to change property values smoothly, over a given duration.*/
-    background-color: transparent;
+    color: #e8e4e0;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-.projects .project-gallery .item .github-btn a:hover {
-
-    background-image: url("Images/GitHub-Mark.png");
-    background-repeat: no-repeat;
-    background-size: 50% auto;
-    background-position: center;
-
-
-    background-color: white;
-    color: rgba(0, 0, 0, 0);
+.btn-github:hover {
+    background: linear-gradient(135deg, #ff6b4a, #d946ef);
+    border-color: transparent;
+    color: #fff;
 }
 
-
-
-
-
-
-
+/* --- 10. Paintings Section --- */
 .painting {
-    padding: 30px 15px;
     position: relative;
+    padding: 140px 0 100px;
+    background-color: #06070a;
     z-index: 1;
-
+    overflow: hidden;
 }
 
-.text-center {
-
-    text-align: center !important;
-    /*The !important property in CSS means that all subsequent rules on an element are to be ignored, and the rule denoted by !important is to be applied.*/
+.brush-stroke {
+    position: absolute;
+    width: 160px;
+    height: 400px;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.painting .section-title {
-    width: 100%;
-    /*must need if i want to put text at the center*/
+.brush-stroke-left {
+    left: 0;
+    top: 10%;
 }
 
-.painting .section-title h1 {
-
-    display: inline-block;
-    font-size: 35px;
-    text-transform: uppercase;
-    font-weight: 600;
-
+.brush-stroke-right {
+    right: 0;
+    bottom: 10%;
 }
 
-.painting .section-title p {
-    text-transform: uppercase;
-    font-size: 15px;
-    color: rgb(109, 109, 109);
-    font-weight: 400;
-    letter-spacing: 2px;
-    margin: 0 0 40px;
-
-}
-
-.painting .painting-gallery {
+.painting-gallery {
     position: relative;
     overflow: hidden;
-    flex: 0 0 80%;
     max-width: 80%;
-    margin: auto;
-    /* You can set the margin property to auto to horizontally center the element within its container.*/
-
+    margin: 0 auto;
+    border-radius: 12px;
 }
 
-.painting .painting-gallery .gallery-slider {
-
-    flex: 0 0 100%;
+.gallery-slider {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    float: left;
-
     transition: margin 1s ease;
-    /*1s: duration
-    ease : specifies a transition effect with a slow start, then fast, then end slowly 
-    */
 }
 
-.painting .painting-gallery .gallery-slider .item {
-
-    float: left;
+.gallery-slider .item {
     position: relative;
-
+    flex: 0 0 100%;
+    min-width: 100%;
 }
 
-.painting .painting-gallery .gallery-slider .item img {
-
+.gallery-slider .item img {
     width: 100%;
     display: block;
-
+    border-radius: 8px;
 }
 
-.painting .painting-gallery .gallery-slider .item .overlay {
+/* Ken Burns on active slide */
+.gallery-slider .item.active img {
+    animation: kenBurns 8s ease-in-out forwards;
+}
 
+@keyframes kenBurns {
+    from { transform: scale(1) translate(0, 0); }
+    to   { transform: scale(1.08) translate(-1%, -1%); }
+}
+
+.gallery-slider .item .overlay {
     position: absolute;
     left: 0;
-    top: 0;
-    bottom: 0;
     right: 0;
+    bottom: 0;
+    top: 0;
     z-index: 10;
-    justify-content: flex-end;
     display: flex;
     flex-direction: column;
-
+    justify-content: flex-end;
+    padding: 16px;
 }
 
-
-.painting .painting-gallery .item .overlay h1 {
-
-    color: rgb(83, 83, 83);
-    text-align: justify !important;
-    font-size: 8px;
+.gallery-slider .item .overlay h1,
+.painting-gallery .item .overlay h1 {
+    color: #8a8a8a;
+    font-size: 0.7rem;
+    text-align: left;
+    font-weight: 400;
 }
 
-.painting .painting-gallery .slide-controls {
-    float: left;
+/* Slide control dots — liquid morph */
+.slide-controls {
     width: 100%;
     text-align: center;
+    padding: 16px 0;
 }
 
-.painting .painting-gallery .slide-controls div {
-    height: 15px;
-    width: 15px;
-    background-color: #ffffff;
+.slide-controls div {
+    height: 12px;
+    width: 12px;
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
-    border: 1px solid #febd01;
+    border: none;
     display: inline-block;
     margin: 10px 6px;
     cursor: pointer;
+    transition: width 0.35s ease, border-radius 0.35s ease, background-color 0.35s ease;
 }
 
-.painting .painting-gallery .slide-controls div.active {
-    background-color: #febd01;
+.slide-controls div.active {
+    width: 32px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef);
 }
 
+/* --- 11. Contact / Footer --- */
+.contact-footer {
+    position: relative;
+    padding: 140px 0 60px;
+    background-color: #111118;
+    z-index: 1;
+    text-align: center;
+    overflow: hidden;
+}
 
+.orbit-rings {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
 
+.orbit-ring {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+}
 
+.orbit-ring-1 {
+    animation: orbitSpin 30s linear infinite;
+}
 
-footer {
-    padding: 50px 15px;
-    background-color: rgba(0, 0, 0, 0.88);
+.orbit-ring-2 {
+    animation: orbitSpin 45s linear infinite reverse;
+}
+
+.orbit-ring-3 {
+    animation: orbitSpin 55s linear infinite;
+}
+
+@keyframes orbitSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.contact-content {
     position: relative;
     z-index: 1;
 }
 
-footer .section-title {
-    width: 100%;
-    /*must need if i want to put text at the center*/
+.contact-content h2 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin-bottom: 24px;
 }
 
-footer .section-title h1 {
-
-    color: rgb(255, 255, 255);
+.contact-email {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    color: #8a8a8a;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: color 0.3s ease;
     display: inline-block;
-    font-size: 15px;
-    text-transform: uppercase;
-    font-weight: 600;
-    padding-bottom: 10px;
+    position: relative;
 }
 
-footer .section-title p {
-
-    font-size: 15px;
-    color: rgb(255, 255, 255);
-    font-weight: 400;
-    letter-spacing: 2px;
-    margin: 0 0 40px;
-
+.contact-email::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #ff6b4a, #d946ef);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
 }
 
-/* ---- Cat Pet ---- */
+.contact-email:hover {
+    color: #ff6b4a;
+}
+
+.contact-email:hover::after {
+    transform: scaleX(1);
+}
+
+/* Copy button */
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin-left: 12px;
+    padding: 8px;
+    border-radius: 6px;
+    color: #8a8a8a;
+    position: relative;
+    transition: color 0.3s ease, background 0.3s ease;
+}
+
+.copy-btn:hover {
+    color: #ff6b4a;
+    background: rgba(255, 107, 74, 0.1);
+}
+
+.copy-icon,
+.check-icon {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.check-icon {
+    position: absolute;
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.copy-btn.copied .copy-icon {
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.copy-btn.copied .check-icon {
+    opacity: 1;
+    transform: scale(1);
+    color: #4ade80;
+}
+
+.copy-tooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: rgba(6, 7, 10, 0.9);
+    color: #4ade80;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.copy-btn.copied .copy-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* --- 12. Cat Pet --- */
 #pet {
     position: fixed;
     left: 0;
@@ -796,4 +1049,191 @@ footer .section-title p {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     display: block;
+}
+
+/* --- 13. Reveal class (scroll-triggered) --- */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition-delay: calc(var(--index, 0) * 80ms);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- 14. prefers-reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .hero-greeting,
+    .hero-name,
+    .hero-subtitle,
+    .btn-cta {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+
+    .reveal {
+        opacity: 1;
+        transform: none;
+    }
+
+    .shape-layer,
+    .skills-illustration,
+    .scroll-indicator,
+    .orbit-ring,
+    .image-border-glow {
+        animation: none;
+    }
+}
+
+/* --- 15. Responsive — Tablet ~768px --- */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 280px;
+        height: 100vh;
+        background: rgba(6, 7, 10, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        flex-direction: column;
+        padding: 100px 32px 40px;
+        gap: 24px;
+        transform: translateX(100%);
+        transition: transform 0.4s ease;
+        z-index: 1000;
+    }
+
+    .nav-links.open {
+        transform: translateX(0);
+    }
+
+    .nav-links li a {
+        font-size: 1.1rem;
+    }
+
+    .hero {
+        padding: 100px 0 60px;
+    }
+
+    .hero-content {
+        text-align: center;
+    }
+
+    .about {
+        padding: 100px 0;
+    }
+
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .about-image {
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .skills {
+        padding: 100px 0;
+    }
+
+    .skills-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .skills-illustration {
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .project-gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .projects {
+        padding: 100px 0;
+    }
+
+    .painting {
+        padding: 100px 0 80px;
+    }
+
+    .painting-gallery {
+        max-width: 95%;
+    }
+
+    .contact-footer {
+        padding: 100px 0 40px;
+    }
+
+    .orbit-ring {
+        width: 300px;
+        height: 300px;
+    }
+}
+
+/* --- 16. Responsive — Mobile ~480px --- */
+@media (max-width: 480px) {
+    .hero-content {
+        text-align: center;
+    }
+
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .painting-gallery {
+        max-width: 100%;
+    }
+
+    .about,
+    .skills,
+    .projects,
+    .painting,
+    .contact-footer {
+        padding: 80px 0;
+    }
+
+    .orbit-ring {
+        width: 200px;
+        height: 200px;
+    }
+
+    body {
+        cursor: auto;
+    }
+
+    .custom-cursor {
+        display: none;
+    }
 }
