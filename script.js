@@ -1,161 +1,355 @@
+/* ============================================================
+   HERO — letter-by-letter stagger
+   ============================================================ */
+(function () {
+    const nameEl = document.getElementById('hero-name');
+    if (!nameEl) return;
+    const fullName = 'Feng Ting Guo — Alex';
+    let html = '';
+    let delay = 0.7; // seconds — starts after greeting animation
+    for (let i = 0; i < fullName.length; i++) {
+        const ch = fullName[i];
+        if (ch === ' ') {
+            html += '<span class="char-space" aria-hidden="true"></span>';
+        } else {
+            html += '<span class="char" style="animation-delay:' + delay.toFixed(3) + 's" aria-hidden="true">'
+                + ch.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                + '</span>';
+            delay += 0.03;
+        }
+    }
+    nameEl.innerHTML = html;
+}());
 
+/* ============================================================
+   FLOATING STARS — hero background
+   ============================================================ */
+(function () {
+    const layer = document.getElementById('stars-layer');
+    if (!layer) return;
+    const count = 55;
+    for (let i = 0; i < count; i++) {
+        const s = document.createElement('span');
+        s.className = 'star';
+        const size = 1 + Math.random() * 2.5;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const duration = 18 + Math.random() * 30;
+        const dxVal = (Math.random() - 0.5) * 80;
+        const dyVal = (Math.random() - 0.5) * 80;
+        const dely = Math.random() * -duration; // stagger start
+        s.style.cssText =
+            'width:' + size + 'px;height:' + size + 'px;' +
+            'left:' + x + '%;top:' + y + '%;' +
+            '--dx:' + dxVal + 'px;--dy:' + dyVal + 'px;' +
+            'animation-duration:' + duration + 's;' +
+            'animation-delay:' + dely + 's;';
+        layer.appendChild(s);
+    }
+}());
 
-//painting slider
-const paintingGallery = document.querySelector(".painting-gallery"); //find gallery-slider from index.html
-const sliderContainer = document.querySelector(".gallery-slider"); //find gallery-slider from index.html
-const slides = sliderContainer.children;
-let containerWidth = sliderContainer.clientWidth; //width of the gallery-slider div
-const paintingGalleryWidth = paintingGallery.clientWidth; //width of the gallery-slider div
+/* ============================================================
+   SCROLL PROGRESS BAR
+   ============================================================ */
+(function () {
+    const bar = document.getElementById('scroll-bar');
+    const dot = document.getElementById('scroll-dot');
+    if (!bar || !dot) return;
 
-/**
- * Finding width of a html element:
- * 
- * 
- * offsetWidth: It returns the width of an HTML element including padding, 
- * border and scrollbar in pixels but it does not include margin width. 
- * If the element does not have any associated layout box then it returns zero.
- * 
- * 
- * clientWidth: It returns the width of an HTML element including padding in pixels but does not include margin, 
- * border and scrollbar width.
- * 
- */
+    function updateProgress() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        bar.style.width = pct + '%';
+        dot.style.left = pct + '%';
+    }
+
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+}());
+
+/* ============================================================
+   SCROLL INDICATOR — hide past 100vh
+   ============================================================ */
+(function () {
+    const indicator = document.getElementById('scroll-indicator');
+    if (!indicator) return;
+
+    window.addEventListener('scroll', function () {
+        if (window.scrollY > window.innerHeight * 0.8) {
+            indicator.classList.add('hidden');
+        } else {
+            indicator.classList.remove('hidden');
+        }
+    }, { passive: true });
+}());
+
+/* ============================================================
+   NAVIGATION — frosted glass on scroll + active section
+   ============================================================ */
+(function () {
+    const header = document.getElementById('site-header');
+    const links  = document.querySelectorAll('.nav-link');
+    const hamburger = document.getElementById('hamburger');
+    const navbar    = document.getElementById('navbar');
+
+    // Frosted glass toggle
+    window.addEventListener('scroll', function () {
+        if (window.scrollY > 80) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    }, { passive: true });
+
+    // Active section tracking
+    const sections = document.querySelectorAll('section[id], footer[id]');
+    const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                links.forEach(function (link) {
+                    link.classList.toggle('active', link.dataset.section === id);
+                });
+            }
+        });
+    }, { threshold: 0.35 });
+
+    sections.forEach(function (s) { observer.observe(s); });
+
+    // Hamburger toggle
+    if (hamburger && navbar) {
+        hamburger.addEventListener('click', function () {
+            const isOpen = navbar.classList.toggle('open');
+            hamburger.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        });
+
+        // Close on link click (mobile)
+        navbar.querySelectorAll('.nav-link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                navbar.classList.remove('open');
+                hamburger.setAttribute('aria-label', 'Open menu');
+            });
+        });
+    }
+}());
+
+/* ============================================================
+   GENERIC SCROLL REVEAL (IntersectionObserver)
+   ============================================================ */
+(function () {
+    if (!('IntersectionObserver' in window)) {
+        // Fallback: show everything
+        document.querySelectorAll(
+            '.reveal-left,.reveal-img,.reveal-block,.reveal-fade-up,.title-line,.project-card'
+        ).forEach(function (el) { el.classList.add('revealed', 'animated'); });
+        return;
+    }
+
+    function makeObserver(threshold) {
+        return new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: threshold });
+    }
+
+    // Title lines: use separate observer to trigger width animation
+    var lineObs = new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animated');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.title-line').forEach(function (el) { lineObs.observe(el); });
+
+    var obs20 = makeObserver(0.15);
+    ['.reveal-left', '.reveal-img', '.reveal-block', '.reveal-fade-up', '.project-card'].forEach(function (sel) {
+        document.querySelectorAll(sel).forEach(function (el) { obs20.observe(el); });
+    });
+}());
+
+/* ============================================================
+   SKILL BARS — animate width on scroll reveal
+   ============================================================ */
+(function () {
+    var fills = document.querySelectorAll('.skill-fill');
+    fills.forEach(function (fill) {
+        var w = fill.getAttribute('data-width') || '0';
+        fill.style.setProperty('--target-w', w + '%');
+    });
+
+    if (!fills.length || !('IntersectionObserver' in window)) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                fills.forEach(function (fill) { fill.classList.add('animated'); });
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.2 });
+
+    var skillsSection = document.querySelector('.about-section');
+    if (skillsSection) observer.observe(skillsSection);
+}());
+
+/* ============================================================
+   CONTACT EMAIL — typeout effect
+   ============================================================ */
+(function () {
+    var emailEl = document.getElementById('contact-email');
+    if (!emailEl) return;
+    var emailText = 'guofengting98@gmail.com';
+    var typed = false;
+
+    function typeOut() {
+        if (typed) return;
+        typed = true;
+        var i = 0;
+        var interval = setInterval(function () {
+            emailEl.textContent = emailText.slice(0, i + 1);
+            i++;
+            if (i >= emailText.length) clearInterval(interval);
+        }, 40);
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                typeOut();
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+
+    observer.observe(emailEl);
+}());
+
+/* ============================================================
+   PROJECT CARDS — 3D tilt on mousemove
+   ============================================================ */
+(function () {
+    document.querySelectorAll('.project-card').forEach(function (card) {
+        card.addEventListener('mousemove', function (e) {
+            var rect = card.getBoundingClientRect();
+            var cx = rect.left + rect.width / 2;
+            var cy = rect.top  + rect.height / 2;
+            var dx = (e.clientX - cx) / (rect.width  / 2);
+            var dy = (e.clientY - cy) / (rect.height / 2);
+            card.style.transform = 'translateY(0) scale(1) rotateX(' + (-dy * 6) + 'deg) rotateY(' + (dx * 6) + 'deg)';
+        });
+
+        card.addEventListener('mouseleave', function () {
+            card.style.transform = '';
+        });
+    });
+}());
+
+/* ============================================================
+   PAINTING SLIDER — gallery
+   ============================================================ */
+const paintingGallery  = document.querySelector('.painting-gallery');
+const sliderContainer  = document.querySelector('.gallery-slider');
+const slides           = sliderContainer.children;
+let containerWidth     = sliderContainer.clientWidth;
+const paintingGalleryWidth = paintingGallery.clientWidth;
 
 const margin = 30;
-
-let itemPerSlide = 0; //how many images it can display in one slide
+let itemPerSlide = 0;
 let slideDots;
 
-// responsive
-const responsive = [ //save an dictionary for how many image to display on one slide
-    //min width to display more item 
-    { breakPoint: { width: 0, item: 1 } },
-    { breakPoint: { width: 991, item: 2 } },
+const responsive = [
+    { breakPoint: { width: 0,    item: 1 } },
+    { breakPoint: { width: 991,  item: 2 } },
     { breakPoint: { width: 1300, item: 3 } }
-]
+];
 
 async function load() {
-
-
     for (let i = 0; i < responsive.length; i++) {
-
-        //loop through all min width to find the best itemPerSlide value
-        if (window.innerWidth > responsive[i].breakPoint.width) { //innerWidth is the width of the webpage (px)
-
+        if (window.innerWidth > responsive[i].breakPoint.width) {
             itemPerSlide = responsive[i].breakPoint.item;
-
         }
-
     }
     await generateGallery();
-    start(); //go to start function
-
+    start();
 }
 
 function start() {
-
-    totalWidth = 0;
-
-    //set width of each image
+    let totalWidth = 0;
     for (let i = 0; i < slides.length; i++) {
-        slides[i].style.width = (paintingGalleryWidth / itemPerSlide) - margin + "px"; // add width (width of the entire image display place / the number of image can be displayed )
-        slides[i].style.margin = margin / 2 + "px"; //  set margin to all four values of the margin
-
-
-
+        slides[i].style.width  = (paintingGalleryWidth / itemPerSlide) - margin + 'px';
+        slides[i].style.margin = margin / 2 + 'px';
         totalWidth += paintingGalleryWidth / itemPerSlide;
-
     }
+    sliderContainer.style.width = totalWidth + 'px';
 
-    sliderContainer.style.width = totalWidth + "px"; //set the width of the displace div 
-
-
-    slideDots = Math.ceil(slides.length / itemPerSlide); //calculate how many dots need to display at the bottom
-
-    //slide dot creation process
+    slideDots = Math.ceil(slides.length / itemPerSlide);
+    const slideCtrl = document.querySelector('.slide-controls');
+    // Clear existing dots before regenerating
+    slideCtrl.innerHTML = '';
     for (let i = 0; i < slideDots; i++) {
-
-        const div = document.createElement("div");//create a new div object
-
+        const div = document.createElement('div');
         div.id = i;
-        div.setAttribute("onclick", "controlSlide(this)"); //set a function when clicked
-        if (i == 0) {
-            div.classList.add("active");
-        }
-
-        document.querySelector(".slide-controls").appendChild(div);//add it to the slide controls div
+        div.setAttribute('onclick', 'controlSlide(this)');
+        if (i === 0) div.classList.add('active');
+        slideCtrl.appendChild(div);
     }
 }
 
-//auto slide the display image page
 let currentSlide = 0;
-let autoSlide = 0;
+let autoSlide    = 0;
 
 function controlSlide(element) {
-    clearInterval(timer) //The clearInterval() method clears a timer set with the setInterval() method.
+    clearInterval(timer);
     timer = setInterval(autoPlay, 5000);
-    autoSlide = element.id;
+    autoSlide    = element.id;
     currentSlide = element.id;
-    changeSlide(currentSlide)
+    changeSlide(currentSlide);
 }
 
 function changeSlide(currentSlide) {
-    controlButtons = document.querySelector(".slide-controls").children;
-
+    const controlButtons = document.querySelector('.slide-controls').children;
     for (let i = 0; i < controlButtons.length; i++) {
-        controlButtons[i].classList.remove("active") //The classList property returns the class name(s) of an element, as a DOMTokenList object. This property is useful to add, remove and toggle CSS classes on an element.
+        controlButtons[i].classList.remove('active');
     }
-
-    controlButtons[currentSlide].classList.add("active")
-
-    sliderContainer.style.marginLeft = -(paintingGalleryWidth * currentSlide) + "px"; //set the style, the transition property will then trans to the proper position
+    controlButtons[currentSlide].classList.add('active');
+    sliderContainer.style.marginLeft = -(paintingGalleryWidth * currentSlide) + 'px';
 }
 
-//autp play the slide
 function autoPlay() {
-
-    if (!slideDots || slideDots === 0) return; // gallery not ready yet
-
-    if (autoSlide == slideDots - 1) {
-        autoSlide = 0;
-    }
-    else {
-        autoSlide++;
-    }
-
-    changeSlide(autoSlide) //input the id of the slide
+    if (!slideDots || slideDots === 0) return;
+    autoSlide = (autoSlide >= slideDots - 1) ? 0 : autoSlide + 1;
+    changeSlide(autoSlide);
 }
-
 
 async function generateGallery() {
-
-    const gallery = document.querySelector('.gallery-slider');
-
-    const apiUrl = 'https://api.github.com/repos/TrueFengTingGuo/FengTingGuoPersonalPortfolio/contents/Images/paintings';
-
+    const gallery  = document.querySelector('.gallery-slider');
+    const apiUrl   = 'https://api.github.com/repos/TrueFengTingGuo/FengTingGuoPersonalPortfolio/contents/Images/paintings';
     let imageFiles = [];
 
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error('API request failed: ' + response.status);
         const files = await response.json();
-
-        // Filter to only image files by extension
         const imageExtensions = /\.(jpg|jpeg|png|gif)$/i;
         imageFiles = files
-            .filter(file => file.type === 'file' && imageExtensions.test(file.name))
-            .map(file => file.name);
+            .filter(function (f) { return f.type === 'file' && imageExtensions.test(f.name); })
+            .map(function (f) { return f.name; });
     } catch (err) {
         console.error('Could not load paintings from GitHub API:', err);
     }
 
-    // String template for each item
     const itemTemplate =
         '<div class="item">' +
-        '<img src="Images/paintings/{filename}" alt="painting">' +
-        '<div class="overlay">' +
-        '<h1>Reference found from internet</h1>' +
-        '</div>' +
+        '<img src="Images/paintings/{filename}" alt="painting" loading="lazy">' +
+        '<div class="overlay"><h1>Reference found from internet</h1></div>' +
         '</div>';
 
     let html = '';
@@ -165,51 +359,8 @@ async function generateGallery() {
     gallery.innerHTML += html;
 }
 
-
-
 let timer = setInterval(autoPlay, 2000);
-
 window.onload = load;
-
-// Skill bar animation on scroll into view
-(function () {
-    const bars = document.querySelectorAll('.skill-bar-in');
-    bars.forEach(function (bar) {
-        const inlineWidth = bar.style.width;
-        bar.style.setProperty('--target-width', inlineWidth);
-    });
-
-    const skillsSection = document.querySelector('.skills');
-    if (skillsSection && 'IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    bars.forEach(function (bar) {
-                        bar.classList.add('animate');
-                    });
-                    observer.unobserve(skillsSection);
-                }
-            });
-        }, { threshold: 0.2 });
-        observer.observe(skillsSection);
-    }
-}());
-
-// header fixed
-
-window.onscroll = function () {
-
-    const docScrollTop = document.documentElement.scrollTop;
-
-    if (window.innerWidth > 991) {
-        if (docScrollTop > 100) {
-            document.querySelector("header").classList.add("fixed")
-        }
-        else {
-            document.querySelector("header").classList.remove("fixed")
-        }
-    }
-}
 
 // ---- Pixel Art Cat Pet - State Machine ----
 //
@@ -550,7 +701,6 @@ window.addEventListener('DOMContentLoaded', function () {
     pet.style.top = catY + 'px';
     requestAnimationFrame(loop);
 });
-
 
 /* ============================================================
     Water Background – Vector-Field Navier-Stokes Fluid Simulation
