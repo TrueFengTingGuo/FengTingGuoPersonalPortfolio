@@ -13,7 +13,7 @@
             html += '<span class="char-space" aria-hidden="true"></span>';
         } else {
             html += '<span class="char" style="animation-delay:' + delay.toFixed(3) + 's" aria-hidden="true">'
-                + ch.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                + ch.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                 + '</span>';
             delay += 0.03;
         }
@@ -282,12 +282,12 @@ async function load() {
 }
 
 function start() {
-    let totalWidth = 0;
+    const itemWidth = paintingGalleryWidth / itemPerSlide;
     for (let i = 0; i < slides.length; i++) {
-        slides[i].style.width  = (paintingGalleryWidth / itemPerSlide) - margin + 'px';
+        slides[i].style.width  = itemWidth - margin + 'px';
         slides[i].style.margin = margin / 2 + 'px';
-        totalWidth += paintingGalleryWidth / itemPerSlide;
     }
+    const totalWidth = slides.length * itemWidth;
     sliderContainer.style.width = totalWidth + 'px';
 
     slideDots = Math.ceil(slides.length / itemPerSlide);
