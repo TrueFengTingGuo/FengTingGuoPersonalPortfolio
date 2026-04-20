@@ -13,9 +13,6 @@
 
 <body>
 
-    <!-- Fluid background canvas (WebGL simulation) -->
-    <canvas id="fluid-bg"></canvas>
-
     <!-- Scroll progress bar -->
     <div id="scroll-progress">
         <div id="scroll-bar"></div>
@@ -47,6 +44,12 @@
 
     <!-- ===================== SECTION 1: HERO (OUTER SPACE) ===================== -->
     <section class="hero" id="home">
+        <!-- Parallax background layers (add your depth images here) -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
         <!-- Floating stars/dust layer -->
         <div class="stars-layer" id="stars-layer"></div>
 
@@ -70,6 +73,12 @@
 
     <!-- ===================== SECTION 2: ABOUT & SKILLS (SKY) ===================== -->
     <section class="about-section" id="about">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
         <div class="section-container">
 
             <div class="section-header">
@@ -189,6 +198,12 @@
 
     <!-- ===================== SECTION 3: PROJECTS (SEA) ===================== -->
     <section class="projects-section" id="project">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
         <div class="section-container">
 
             <div class="section-header centered">
@@ -268,8 +283,17 @@
     </section>
     <!-- END PROJECTS -->
 
+    <!-- Fluid WebGL transition (water surface between Sea & Paintings) -->
+    <canvas id="fluid-bg"></canvas>
+
     <!-- ===================== SECTION 4: PAINTINGS (HAND UPON SKY) ===================== -->
     <section class="paintings-section" id="painting">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
         <div class="section-container">
 
             <div class="section-header centered">
@@ -289,6 +313,12 @@
 
     <!-- ===================== SECTION 5: CONTACT / FOOTER ===================== -->
     <footer class="contact-section" id="contact">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
         <div class="section-container">
             <h2 class="contact-title reveal-fade-up">Contact Me</h2>
             <p class="contact-email reveal-fade-up" id="contact-email" style="--delay:200ms"></p>

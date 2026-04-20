@@ -69,6 +69,44 @@
 }());
 
 /* ============================================================
+   PARALLAX LAYERS — per-section depth effect via data-speed
+   ============================================================ */
+(function () {
+    var layers = document.querySelectorAll('.parallax-layer');
+    if (!layers.length) return;
+
+    var ticking = false;
+
+    function updateParallax() {
+        var winH = window.innerHeight;
+        layers.forEach(function (layer) {
+            var section = layer.closest('section, footer');
+            if (!section) return;
+            var rect = section.getBoundingClientRect();
+            // Skip if section is not in or near viewport
+            if (rect.bottom < -winH || rect.top > winH * 2) return;
+
+            var speed = parseFloat(layer.getAttribute('data-speed')) || 0;
+            // Centre of section relative to viewport centre
+            var sectionCenter = rect.top + rect.height / 2;
+            var viewCenter = winH / 2;
+            var offset = (sectionCenter - viewCenter) * speed;
+            layer.style.transform = 'translateY(' + offset + 'px)';
+        });
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    }, { passive: true });
+
+    updateParallax();
+}());
+
+/* ============================================================
    SCROLL INDICATOR — hide past 100vh
    ============================================================ */
 (function () {
@@ -1027,8 +1065,8 @@ void main() {
     let velocity, pressure, dye, divergenceFBO, curlFBO;
 
     function initBuffers() {
-        displayW = canvas.width  = window.innerWidth;
-        displayH = canvas.height = window.innerHeight;
+        displayW = canvas.width  = canvas.clientWidth;
+        displayH = canvas.height = canvas.clientHeight;
         simW = Math.round(displayW * SIM_SCALE);
         simH = Math.round(displayH * SIM_SCALE);
 
@@ -1346,50 +1384,58 @@ void main() {
         return { vx, vy, speed };
     }
 
+    // Convert page coordinates to canvas-local coordinates
+    function toCanvasCoords(clientX, clientY) {
+        var rect = canvas.getBoundingClientRect();
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
     function onMove(px, py) {
-        recordPointerPoint(px, py);
+        var c = toCanvasCoords(px, py);
+        recordPointerPoint(c.x, c.y);
     }
 
     function onBurst(px, py) {
-        const color = randomWaterColor();
+        var c = toCanvasCoords(px, py);
+        var color = randomWaterColor();
         // Radial burst: inject velocity in multiple directions for a splash
-        const burstForce = 180;
-        const dirs = 8;
-        for (let i = 0; i < dirs; i++) {
-            const angle = (i / dirs) * Math.PI * 2;
-            const dx = Math.cos(angle) * burstForce;
-            const dy = Math.sin(angle) * burstForce;
-            queueSplat(px, py, dx, dy, color);
+        var burstForce = 180;
+        var dirs = 8;
+        for (var i = 0; i < dirs; i++) {
+            var angle = (i / dirs) * Math.PI * 2;
+            var dx = Math.cos(angle) * burstForce;
+            var dy = Math.sin(angle) * burstForce;
+            queueSplat(c.x, c.y, dx, dy, color);
         }
     }
 
-    window.addEventListener('pointermove',
+    canvas.addEventListener('pointermove',
         e => onMove(e.clientX, e.clientY), { passive: true });
-    window.addEventListener('mousemove',
+    canvas.addEventListener('mousemove',
         e => { if (!window.PointerEvent) onMove(e.clientX, e.clientY); },
         { passive: true });
-    window.addEventListener('click',
+    canvas.addEventListener('click',
         e => onBurst(e.clientX, e.clientY));
-    window.addEventListener('touchmove',
+    canvas.addEventListener('touchmove',
         e => onMove(e.touches[0].clientX, e.touches[0].clientY),
         { passive: true });
-    window.addEventListener('touchstart',
+    canvas.addEventListener('touchstart',
         e => onBurst(e.touches[0].clientX, e.touches[0].clientY),
         { passive: true });
     window.addEventListener('resize', () => {
         mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
         clearPointerHistory(); initBuffers();
     });
-    window.addEventListener('pointerleave', () => {
+    canvas.addEventListener('pointerleave', () => {
         mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
         clearPointerHistory();
         splatColor = randomWaterColor();
     });
-    window.addEventListener('pointercancel', () => {
+    canvas.addEventListener('pointercancel', () => {
         mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
         clearPointerHistory();
     });
-    window.addEventListener('touchend', () => {
+    canvas.addEventListener('touchend', () => {
         mouseX = -1; mouseY = -1; lastDropX = -1; lastDropY = -1;
         clearPointerHistory();
         splatColor = randomWaterColor();
