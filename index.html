@@ -2,293 +2,190 @@
 <html lang="en">
 
 <head>
-    <title>Personal Portfolio</title>
+    <meta charset="UTF-8">
+    <title>Feng Ting Guo — Code &amp; Canvas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- Fluid background canvas -->
-    <canvas id="fluid-bg"></canvas>
+    <!-- Scroll progress bar -->
+    <div id="scroll-progress">
+        <div id="scroll-bar"></div>
+        <div id="scroll-dot"></div>
+    </div>
 
-
-
-    <!-- Start Header-->
-    <header>
-        <div class="container">
-            <div class="row">
-                <div class="brand-name">
-                    <a href="" class="logo">My Portfolio</a>
-                </div>
-
-                <div class="navbar">
-                    <ul>
-                        <!-- The <ul> tag defines an unordered (bulleted) list. Use the <ul> tag together with the <li> tag to create unordered lists.-->
-                        <li><a href="#home" class="active">Home</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#project">Programming</a></li>
-                        <li><a href="#painting">Painting</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </div>
-            </div>
+    <!-- Navigation -->
+    <header id="site-header">
+        <div class="nav-container">
+            <a href="#home" class="logo">Code &amp; Canvas</a>
+            <nav class="navbar" id="navbar">
+                <ul>
+                    <li><a href="#home" class="nav-link active" data-section="home">Home</a></li>
+                    <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+                    <li><a href="#project" class="nav-link" data-section="project">Projects</a></li>
+                    <li><a href="#painting" class="nav-link" data-section="painting">Paintings</a></li>
+                    <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+                </ul>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Open menu">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+                    <path class="ham-line ham-line-1" d="M3 6h18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path class="ham-line ham-line-2" d="M3 12h18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path class="ham-line ham-line-3" d="M3 18h18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
         </div>
     </header>
-    <!-- End Header-->
 
-    <!-- Start Home-->
-    <section class="home" id="home">
-        <div class="container">
-            <div class="row full-screen">
-                <div class="home-content">
-                    <div class="block">
-                        <h6>Hello, my name is</h6>
-                        <h1>Feng Ting Guo - Alex</h1>
-                        <h3>A Software Developer</h3>
-                        <div class="github-btn">
-                            <a href="https://github.com/TrueFengTingGuo">Go To My GitHub</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- ===================== SECTION 1: HERO (OUTER SPACE) ===================== -->
+    <section class="hero" id="home">
+        <!-- Parallax background layers (add your depth images here) -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
         </div>
-    </section>
-    <!-- End Home-->
 
-    <!-- Start About -->
-    <section class="about-me" id="about">
-        <div class="container">
-            <div class="row">
-                <div class="section-title">
-                    <h1>About Me</h1>
-                    <p class="small">Information About me</p> <!--<p> tag defines a paragraph.-->
-                </div>
-            </div>
-            <div class="row">
-                <div class="about-content">
-                    <div class="row">
-                        <div class="img">
-                            <img src="Images/About-me-selfpic.png" alt="about-me">
-                        </div>
+        <!-- Floating stars/dust layer -->
+        <div class="stars-layer" id="stars-layer"></div>
 
-                        <div class="text">
-                            <div class="font-30 bold-font">I'M Feng Ting Guo</div>
-                            <h6>A <span>Software Developer</span>
-                                <!--A <span> element used to color a part of a text:-->
-                                <div class="grey-font font-15">Always do what you're afraid to do.</div>
-
-                                <br>
-
-                                <div class="info">
-                                    <div class="row">
-                                        <div class="label font-25">Education</div>
-                                        <div class="grey-font">Bachelor of Computer Science, Honors , Carleton
-                                            University, Ottawa, Ontario</div>
-                                    </div>
-                                </div>
-
-
-                                <div class="work-experience">
-                                    <div class="label font-25">Work Experience</div>
-                                    <br>
-                                    <div>
-                                        <div class="font-15">Software Developer – Contract 2021-2025 </div>
-                                        <div class="grey-font font-15"> Canada Revenue Agency Ottawa, Ontario</div>
-                                        <div class="work-content">
-                                            <li class="font-13"> Developed the front-end using Angular and Nodejs</li>
-                                            <li class="font-13"> Implemented back-end API calls using Java</li>
-                                            <li class="font-13"> Writing SQL for testing and demo</li>
-                                            <li class="font-13"> Worked with Database team on database calls with system
-                                                design in mind</li>
-                                            <li class="font-13"> Collaborated with clients and business teams to
-                                                translate requirements into clear and accurate development stories,</li>
-                                            <li class="font-13"> Provided time assessments on new functionality</li>
-                                            <li class="font-13"> Provided short term and long term fix while bug occurs
-                                            </li>
-                                            <li class="font-13"> Building friendly relationship with other staffs
-                                                quickly</li>
-                                        </div>
-                                    </div>
-                                </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="hero-content">
+            <p class="hero-greeting">Hello, my name is</p>
+            <h1 class="hero-name" id="hero-name" aria-label="Feng Ting Guo — Alex"></h1>
+            <h2 class="hero-subtitle">Software Developer · Digital Artist</h2>
+            <div class="hero-cta">
+                <a href="#about" class="cta-btn">View My Work ↓</a>
             </div>
         </div>
 
-    </section>
-    <!-- End About -->
-
-
-    <!-- Start Skills -->
-    <section class="skills">
-        <div class="container">
-            <div class="row">
-                <div class="section-title">
-                    <p>Rate My Programming Skills</p>
-                </div>
-
-            </div>
-            <div class="row align-items-center">
-                <div class="skills-content">
-
-                    <div class="row">
-
-
-                        <div class="skill-box">
-                            <h6>Java</h6>
-                            <p class="skill-detail">Used for back-end API calls, application logic, and
-                                database-connected services in professional projects.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="skill-box">
-                            <h6>C++</h6>
-                            <p class="skill-detail">Sensor hardware reading, robotics programming</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="skill-box">
-                            <h6>C#</h6>
-                            <p class="skill-detail">Used with Unity to build gameplay systems, side-scrolling mechanics,
-                                and other game features.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 75%">
-                                    <span>75%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>Python</h6>
-                            <p class="skill-detail">Used for scripting, problem solving, and building tools for
-                                automation.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>HTML</h6>
-                            <p class="skill-detail">Used to structure this portfolio and other web pages with clear
-                                layouts and content sections.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="skill-box">
-                            <h6>JavaScript</h6>
-                            <p class="skill-detail">Used for interactive website behavior, animations, sliders, and
-                                dynamic user interface features.</p>
-                            <div class="skill-bar">
-                                <div class="skill-bar-in" style="width: 80%">
-                                    <span>80%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="img">
-                    <img src="Images/Flower and girl.jpg" alt="skill">
-                </div>
-
-            </div>
+        <!-- Pulsing scroll chevron -->
+        <div class="scroll-indicator" id="scroll-indicator">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none">
+                <path d="M6 9l6 6 6-6" stroke="#ff7b54" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
         </div>
     </section>
-    <!-- End Skills -->
+    <!-- END HERO -->
 
+    <!-- ===================== SECTION 2: ABOUT & SKILLS (SKY) ===================== -->
+    <section class="about-section" id="about">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
 
-    <!-- Start Projects -->
-    <section class="projects" id="project">
-        <div class="container">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Programming Projects</h1>
-                    <p>This is what I do</p>
-                </div>
+        <div class="section-container">
+
+            <div class="section-header">
+                <h2 class="section-title-text reveal-left">About Me</h2>
+                <div class="title-line reveal-left" style="--delay:150ms"></div>
             </div>
-            <div class="row">
-                <div class="project-gallery">
 
-                    <div class="item">
-                        <img src="Images/Bajump_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Side Scrolling Game: Using Unity Game Engine</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/BaJump">See It On GitHub</a>
-                            </div>
+            <div class="about-grid">
+                <!-- Image column -->
+                <div class="about-img-col reveal-img">
+                    <img src="Images/About-me-selfpic.png" alt="Feng Ting Guo" loading="lazy">
+                </div>
+
+                <!-- Text + skills column -->
+                <div class="about-text-col">
+
+                    <div class="reveal-block" style="--delay:0ms">
+                        <div class="about-name">Feng Ting Guo — Alex</div>
+                        <div class="about-role">Software Developer <span class="accent">&amp; Digital Artist</span></div>
+                        <div class="about-quote">"Always do what you're afraid to do."</div>
+                    </div>
+
+                    <div class="reveal-block" style="--delay:100ms">
+                        <div class="about-label">Education</div>
+                        <p class="about-detail">Bachelor of Computer Science, Honours — Carleton University, Ottawa, Ontario</p>
+                    </div>
+
+                    <div class="reveal-block" style="--delay:200ms">
+                        <div class="about-label">Work Experience</div>
+                        <div class="experience-item">
+                            <div class="exp-title">Software Developer – Contract 2021–2025</div>
+                            <div class="exp-company">Canada Revenue Agency · Ottawa, Ontario</div>
+                            <ul class="exp-list">
+                                <li>Developed front-end using Angular and Node.js</li>
+                                <li>Implemented back-end API calls using Java</li>
+                                <li>Wrote SQL for testing and demos</li>
+                                <li>Collaborated with database team on system design</li>
+                                <li>Translated client requirements into development stories</li>
+                                <li>Provided time assessments on new functionality</li>
+                                <li>Delivered short-term and long-term bug fixes</li>
+                            </ul>
                         </div>
                     </div>
 
-
-                    <div class="item">
-                        <img src="Images/openglHelicopter.png" alt="project">
-                        <div class="overlay">
-                            <h1>Game: using OpenGL</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/C-Side-Scrolling-Game">See It On GitHub</a>
+                    <!-- Skills merged into About column -->
+                    <div class="reveal-block" style="--delay:300ms">
+                        <div class="about-label skills-label">Skills</div>
+                        <div class="skills-grid">
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Java</span>
+                                    <span class="skill-pct">80%</span>
+                                </div>
+                                <p class="skill-desc">Back-end APIs, application logic, and database-connected services.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="80"></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="item">
-                        <img src="Images/Demolish_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Game & AI</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/Demolish">See It On GitHub</a>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">C++</span>
+                                    <span class="skill-pct">80%</span>
+                                </div>
+                                <p class="skill-desc">Sensor hardware reading and robotics programming.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="80"></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="item">
-                        <img src="Images/Tower_defence_video.gif" alt="project">
-                        <div class="overlay">
-                            <h1>Game: Group Project</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/LI-YIMAI/Last-Zerzura">See It On GitHub</a>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">C#</span>
+                                    <span class="skill-pct">75%</span>
+                                </div>
+                                <p class="skill-desc">Unity gameplay systems and side-scrolling mechanics.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="75"></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-
-                    <div class="item">
-                        <img src="Images/website.png" alt="project">
-                        <div class="overlay">
-                            <h1>My Portfolio: Website</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/FengTingGuoPersonalPortfolio">See It On
-                                    GitHub</a>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Python</span>
+                                    <span class="skill-pct">80%</span>
+                                </div>
+                                <p class="skill-desc">Scripting, automation tools, and problem solving.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="80"></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-
-                    <div class="item">
-                        <img src="Images/Octree_game_screenshot.png" alt="project">
-                        <div class="overlay">
-                            <h1>3D Game: Using Octree Data Structure</h1>
-                            <div class="github-btn">
-                                <a href="https://github.com/TrueFengTingGuo/Octree_DataStructure_OpenGL-3D">See It On
-                                    GitHub</a>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">HTML / CSS</span>
+                                    <span class="skill-pct">80%</span>
+                                </div>
+                                <p class="skill-desc">Structuring and styling web pages and portfolios.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="80"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">JavaScript</span>
+                                    <span class="skill-pct">80%</span>
+                                </div>
+                                <p class="skill-desc">Interactive behavior, animations, and dynamic UI features.</p>
+                                <div class="skill-track">
+                                    <div class="skill-fill" data-width="80"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -297,49 +194,144 @@
             </div>
         </div>
     </section>
-    <!-- End Projects -->
+    <!-- END ABOUT -->
 
+    <!-- ===================== SECTION 3: PROJECTS (SEA) ===================== -->
+    <section class="projects-section" id="project">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
 
+        <div class="section-container">
 
-    <!-- Start Painting -->
-    <section class="painting" id="painting">
-        <div class="container">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Digital Paintings</h1>
-                    <p>This is my Hobby</p>
-                </div>
+            <div class="section-header centered">
+                <h2 class="section-title-text">Programming Projects</h2>
+                <div class="title-line centered-line"></div>
+                <p class="section-subtitle">This is what I do</p>
             </div>
 
-            <div class="row">
-                <div class="painting-gallery">
-
-                    <div class="gallery-slider">
+            <div class="projects-grid">
+                <div class="project-card" style="--index:0">
+                    <div class="card-media">
+                        <img src="Images/Bajump_video.gif" alt="Side Scrolling Game" loading="lazy">
                     </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">Side Scrolling Game</h3>
+                        <p class="card-sub">Using Unity Game Engine</p>
+                        <a href="https://github.com/TrueFengTingGuo/BaJump" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
+                </div>
 
-                    <!-- slide controler -->
-                    <div class="slide-controls"></div>
+                <div class="project-card" style="--index:1">
+                    <div class="card-media">
+                        <img src="Images/openglHelicopter.png" alt="OpenGL Game" loading="lazy">
+                    </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">OpenGL Game</h3>
+                        <p class="card-sub">C Side-Scrolling with OpenGL</p>
+                        <a href="https://github.com/TrueFengTingGuo/C-Side-Scrolling-Game" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
+                </div>
 
+                <div class="project-card" style="--index:2">
+                    <div class="card-media">
+                        <img src="Images/Demolish_video.gif" alt="Game and AI" loading="lazy">
+                    </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">Game &amp; AI</h3>
+                        <p class="card-sub">Demolish — AI-powered gameplay</p>
+                        <a href="https://github.com/TrueFengTingGuo/Demolish" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
+                </div>
 
+                <div class="project-card" style="--index:3">
+                    <div class="card-media">
+                        <img src="Images/Tower_defence_video.gif" alt="Group Project" loading="lazy">
+                    </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">Group Project</h3>
+                        <p class="card-sub">Tower Defence — Last Zerzura</p>
+                        <a href="https://github.com/LI-YIMAI/Last-Zerzura" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card" style="--index:4">
+                    <div class="card-media">
+                        <img src="Images/website.png" alt="Portfolio Website" loading="lazy">
+                    </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">My Portfolio</h3>
+                        <p class="card-sub">Personal website — this site</p>
+                        <a href="https://github.com/TrueFengTingGuo/FengTingGuoPersonalPortfolio" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card" style="--index:5">
+                    <div class="card-media">
+                        <img src="Images/Octree_game_screenshot.png" alt="3D Octree Game" loading="lazy">
+                    </div>
+                    <div class="card-overlay">
+                        <h3 class="card-title">3D Octree Game</h3>
+                        <p class="card-sub">OpenGL with Octree Data Structure</p>
+                        <a href="https://github.com/TrueFengTingGuo/Octree_DataStructure_OpenGL-3D" class="card-btn" target="_blank" rel="noopener">See It On GitHub</a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- End Painting -->
+    <!-- END PROJECTS -->
 
+    <!-- Fluid WebGL transition (water surface between Sea & Paintings) -->
+    <canvas id="fluid-bg"></canvas>
 
-    <!-- Start Footer -->
-    <footer>
-        <div class="container" id="contact">
-            <div class="row">
-                <div class="section-title text-center">
-                    <h1>Contact Me</h1>
-                    <p>guofengting98@gmail.com</p>
-                </div>
+    <!-- ===================== SECTION 4: PAINTINGS (HAND UPON SKY) ===================== -->
+    <section class="paintings-section" id="painting">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
+        <div class="section-container">
+
+            <div class="section-header centered">
+                <h2 class="section-title-text">Digital Paintings</h2>
+                <div class="title-line centered-line"></div>
+                <p class="section-subtitle">This is my Hobby</p>
+            </div>
+
+            <div class="painting-gallery">
+                <div class="gallery-slider"></div>
+                <div class="slide-controls"></div>
+            </div>
+
+        </div>
+    </section>
+    <!-- END PAINTINGS -->
+
+    <!-- ===================== SECTION 5: CONTACT / FOOTER ===================== -->
+    <footer class="contact-section" id="contact">
+        <!-- Parallax background layers -->
+        <div class="parallax-bg">
+            <!-- <div class="parallax-layer" data-speed="0.1" style="background-image: url('...')"></div> -->
+            <!-- <div class="parallax-layer" data-speed="0.3" style="background-image: url('...')"></div> -->
+        </div>
+
+        <div class="section-container">
+            <h2 class="contact-title reveal-fade-up">Contact Me</h2>
+            <p class="contact-email reveal-fade-up" id="contact-email" style="--delay:200ms"></p>
+            <div class="social-icons reveal-fade-up" style="--delay:400ms">
+                <a href="https://github.com/TrueFengTingGuo" target="_blank" rel="noopener" class="social-icon" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+                        <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.482 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.021C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </footer>
-    <!-- End Footer -->
+    <!-- END CONTACT -->
 
     <!-- Cat Pet -->
     <div id="pet">
